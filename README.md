@@ -2,7 +2,7 @@
 
 Decision support for crop rotation, built for the NASA Space Apps Challenge 2026, challenge **"Field Shift: Adapting Farms with NASA Data"**.
 
-**Team Janela Verde:** José Luiz Kemp Filho and Lucas Nascimento.
+**Team Green Window:** José Luiz Kemp Filho and Lucas Nascimento.
 
 **Demo:** [7-slide deck (PDF)](demo/Field-Shift-demo.pdf) · [PowerPoint](demo/Field-Shift-demo.pptx)
 
