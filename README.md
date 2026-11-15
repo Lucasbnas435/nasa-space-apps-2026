@@ -44,7 +44,9 @@ node teste.js
 | `T2M_MIN` | lowest temperature recorded per month, frost risk |
 | `T2M_MAX` | highest temperature recorded per month |
 
-The POWER grid cell is about 50 km wide. The grower can enter the real altitude of the area and the tool corrects temperature by the standard lapse rate (0.65 °C per 100 m). Rainfall is not corrected.
+**NASA SRTM** (Shuttle Radar Topography Mission) elevation, served by the Open-Elevation API: altitude of the grower's point.
+
+The two datasets work together. The POWER grid cell is about 50 km wide and reports its own mean altitude. The tool reads the real altitude of the point from SRTM (or from the grower) and corrects temperature by the standard lapse rate (0.65 °C per 100 m). In mountain areas this changes the answer: at the default point the cell sits at 1,094 m and the field at about 1,330 m, a 1.5 °C difference. Rainfall is not corrected.
 
 ## Other data sources
 
@@ -90,7 +92,7 @@ These are also shown on screen.
 
 ## Not done yet
 
-- Other NASA datasets named in the challenge (SMAP, GPM, ECOSTRESS, Landsat, MODIS, GRACE, SRTM, GEDI).
+- Other NASA datasets named in the challenge (SMAP, GPM, ECOSTRESS, Landsat, MODIS, GRACE, GEDI).
 - Interactive map.
 - Other official Brazilian sources: CONAB (crop forecasts) and MapBiomas (land use maps).
 - English interface.
