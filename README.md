@@ -2,6 +2,12 @@
 
 Decision support for crop rotation, built for the NASA Space Apps Challenge 2026, challenge **"Field Shift: Adapting Farms with NASA Data"**.
 
+**Team Janela Verde:** José Luiz Kemp Filho and Lucas Nascimento.
+
+**Demo:** [7-slide deck (PDF)](demo/Field-Shift-demo.pdf) · [PowerPoint](demo/Field-Shift-demo.pptx)
+
+![Product-by-month calendar: when each crop fits the climate at the point](demo/screenshots/calendar.png)
+
 A grower chooses a production profile (vegetables, annual crops, or perennials such as coffee and banana), enters a location, what one bed or field receives over two years and what matters most to them. The tool fetches ten years of NASA climate data for that point and returns:
 
 1. **A product-by-month calendar**: in which months each crop fits the local temperature, where it sits at the limit and where it falls outside (or faces frost), with the reason for every cell.
@@ -16,6 +22,20 @@ A grower chooses a production profile (vegetables, annual crops, or perennials s
 The tool supports the grower's and the agronomist's judgment. It does not replace it.
 
 The interface is in English by default, with Brazilian Portuguese selectable at the top of the page (or with `?lang=pt` in the address). It is written for growers with little technical background.
+
+## What it looks like
+
+Ten years of NASA POWER climate for the point, corrected to the real altitude read from NASA SRTM:
+
+![Climate at the point](demo/screenshots/climate.png)
+
+The best-scoring rotation for the grower's priorities, with reasons, evidence, benefits and risks:
+
+![Best strategy card](demo/screenshots/best-strategy.png)
+
+What is grown in the municipality, from the Brazilian statistics office:
+
+![Municipal context](demo/screenshots/municipality.png)
 
 ## How to run
 
@@ -98,7 +118,7 @@ These are also shown on screen.
 
 ## Use of AI
 
-The code, the crop reference table and this document were written with Claude Code (Anthropic) under the direction of the team, who defined the problem, the target grower and the scope, and reviewed the results. The running application does not call any AI model: every number on screen comes from NASA POWER data and the rules in `modelo.js`.
+The code, the crop reference table, the demo deck and this document were written with Claude Code (Anthropic) under the direction of the team, who defined the problem, the target grower and the scope, and reviewed the results. The running application does not call any AI model: every number on screen comes from NASA POWER and SRTM data, IBGE statistics and the rules in `modelo.js`. The images in the deck and in this document are screenshots of the working tool, not AI-generated images.
 
 ## License and third-party data
 
@@ -121,3 +141,4 @@ No third-party code libraries are used: the page is plain HTML, CSS and JavaScri
 | `modelo.js` | crop table and rotation model |
 | `teste.js` | self-check of the model against live NASA POWER and IBGE data |
 | `LICENSE` | Apache License 2.0 |
+| `demo/` | demo deck (PDF and PowerPoint) and screenshots of the working tool |
