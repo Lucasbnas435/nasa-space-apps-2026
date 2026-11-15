@@ -349,8 +349,8 @@ function desenhar() {
         `<div style="height:${100 * v / max}%" title="${MS[m]}: ${L('média', 'mean')} ${mm(v)}, ${L('ano mais seco', 'driest year')} ${mm(clima.chuvaSeca[m])}"><i style="height:${100 * clima.chuvaSeca[m] / v}%"></i></div>`).join('')}</div>
       <div class="eixo12">${MS.map((m, i) => `<div>${m}<br>${clima.tMedia[i].toFixed(0)}°${clima.umidMedia[i] != null
         ? `<br><span title="${L('umidade do solo na zona das raízes; menor dos dez anos', 'root-zone soil wetness; lowest of the ten years')}: ${pc(clima.umidSeca[i])}">${pc(clima.umidMedia[i])}</span>` : ''}</div>`).join('')}</div>
-      <p><small>${L(`Barra clara: chuva média do mês. Parte escura: o ano mais seco. Abaixo do mês, a temperatura média. Total de chuva no ano: ${anual}. Mês mais quente: ${MS[quente]} (${gr(clima.tMedia[quente])}). Mínima registrada abaixo de ${F.LIMITE_GEADA} °C em: ${frios.join(', ') || 'nenhum mês'}.`,
-        `Light bar: mean rainfall of the month. Dark part: the driest year. Below each month, the mean temperature. Total rainfall per year: ${anual}. Warmest month: ${MS[quente]} (${gr(clima.tMedia[quente])}). Lowest temperature on record below ${F.LIMITE_GEADA} °C in: ${frios.join(', ') || 'no month'}.`)}
+      <p><small>${L(`Barra clara: chuva média do mês. Parte escura: o ano mais seco. Abaixo do mês, a temperatura média em °C. Total de chuva no ano: ${anual}. Mês mais quente: ${MS[quente]} (${gr(clima.tMedia[quente])}). Mínima registrada abaixo de ${F.LIMITE_GEADA} °C em: ${frios.join(', ') || 'nenhum mês'}.`,
+        `Light bar: mean rainfall of the month. Dark part: the driest year. Below each month, the mean temperature in °C. Total rainfall per year: ${anual}. Warmest month: ${MS[quente]} (${gr(clima.tMedia[quente])}). Lowest temperature on record below ${F.LIMITE_GEADA} °C in: ${frios.join(', ') || 'no month'}.`)}
       ${clima.ajuste ? L(`Temperatura corrigida em ${gr(clima.ajuste)} para ${$('alt').value} m (altitude: ${fonteAlt}); a célula da NASA está a ${cel} m.`, `Temperature corrected by ${gr(clima.ajuste)} for ${$('alt').value} m (altitude: ${fonteAlt}); the NASA grid cell sits at ${cel} m.`)
         : L(`Sem correção de altitude: o dado vale para ${cel} m.`, `No altitude correction: the data holds for ${cel} m.`)}
       ${clima.declive != null ? L(` Declive: ${dc(clima.declive)}, relevo ${F.relevoNome(F.relevo(clima.declive))} (${decSrtm ? 'relevo SRTM da NASA, média de cerca de 1 km em volta do ponto' : 'informado por você'}).`,
@@ -373,7 +373,7 @@ function desenhar() {
     <h2>${perfil() === 'perenes' ? L('Entrelinha: três caminhos', 'Between the rows: three paths') : L(`Rotação do ${nomeFaixa()}: três caminhos`, `Rotation of the ${nomeFaixa()}: three paths`)}</h2>
     ${est.map(e => cartao(e, est[0], e.nota === topo && e.id !== 'atual')).join('')}
     <section class="aviso">
-      <h2>${L('O que esta ferramenta não sabe', 'What this tool does not know')}</h2>
+      <h2>${L('Limites desta ferramenta', 'Limits of this tool')}</h2>
       <ul>
         <li>${L(`O clima vem de uma grade de cerca de 50 km, com altitude média de ${cel} m. A temperatura é corrigida pela altitude da área; a chuva não é.`, `Climate comes from a grid of about 50 km, with a mean altitude of ${cel} m. Temperature is corrected for the altitude of your land; rainfall is not.`)}</li>
         <li>${L(`A umidade do solo é estimada por modelo (MERRA-2) para a mesma grade, não medida no seu solo. Solo arenoso seca antes, argiloso segura mais água. O limite de ${pc(F.SOLO_SECO)} para "solo seco" ainda não foi revisado por um agrônomo.`, `Soil wetness is a model estimate (MERRA-2) for the same grid, not a measurement of your soil. Sandy soil dries sooner, clay holds more water. The ${pc(F.SOLO_SECO)} threshold for "dry soil" has not been reviewed by an agronomist yet.`)}</li>

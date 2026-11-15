@@ -17,7 +17,7 @@ A grower chooses a production profile (vegetables, annual crops, or perennials s
    - alternating plant families and fitting crops to the climate.
 3. For each strategy: why it is suggested, the evidence behind it, benefits over the current rotation, and risks that need local review.
 4. **Municipal context**: what is grown in the grower's municipality, by harvested area, from the Brazilian statistics office (IBGE). It shows at a glance whether the region is a monoculture.
-5. A closing box, **"what this tool does not know"**, stating its limits on screen.
+5. A closing box, **"Limits of this tool"**, listing on screen what the tool does not model.
 
 The tool supports the grower's and the agronomist's judgment. It does not replace it.
 
@@ -33,7 +33,7 @@ The interface is in English by default, with Brazilian Portuguese selectable at 
 | Seasons when crops are vulnerable | Product-by-month calendar: frost, heat and cold outside the crop's range, heavy rain on open-field leaf crops, each with its reason. |
 | Times when fields are bare | Months with an empty bed and the rainfall that falls on bare soil, per strategy. |
 | At least three strategies, including the existing one | Current rotation, current rotation plus green manure, and alternating plant families fitted to the climate. Perennials: three inter-row options. |
-| Why, evidence, benefits, gaps and risks per strategy | Each card states why it is suggested, the evidence from NASA data, the benefits over the current rotation, and the risks that need local review. Information gaps are listed on screen in "What this tool does not know". |
+| Why, evidence, benefits, gaps and risks per strategy | Each card states why it is suggested, the evidence from NASA data, the benefits over the current rotation, and the risks that need local review. Information gaps are listed on screen in "Limits of this tool". |
 | Pest-cycle disruption, water demand, erosion | Plant-family repetition, irrigation estimate, and erosion risk from rainfall on bare soil combined with the slope read from SRTM. |
 | Market suitability | Municipal context from IBGE: what the region already grows and whether it is a monoculture. Prices are not modeled. |
 | Support, not replace, local expertise | Stated in the header, on every card and in the closing box. |
