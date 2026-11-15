@@ -15,7 +15,7 @@ A grower chooses a production profile (vegetables, annual crops, or perennials s
 
 The tool supports the grower's and the agronomist's judgment. It does not replace it.
 
-The interface is in Brazilian Portuguese, written for growers with little technical background.
+The interface is in English by default, with Brazilian Portuguese selectable at the top of the page (or with `?lang=pt` in the address). It is written for growers with little technical background.
 
 ## How to run
 
@@ -95,11 +95,23 @@ These are also shown on screen.
 - Other NASA datasets named in the challenge (SMAP, GPM, ECOSTRESS, Landsat, MODIS, GRACE, GEDI).
 - Interactive map.
 - Other official Brazilian sources: CONAB (crop forecasts) and MapBiomas (land use maps).
-- English interface.
 
 ## Use of AI
 
 The code, the crop reference table and this document were written with Claude Code (Anthropic) under the direction of the team, who defined the problem, the target grower and the scope, and reviewed the results. The running application does not call any AI model: every number on screen comes from NASA POWER data and the rules in `modelo.js`.
+
+## License and third-party data
+
+Original code and content in this repository are licensed under the **Apache License 2.0** (see `LICENSE`).
+
+| Source | Terms |
+|---|---|
+| NASA POWER | NASA open data, free and open |
+| NASA SRTM, via Open-Elevation | SRTM is public domain; the Open-Elevation service is free and open source |
+| IBGE (SIDRA and localities APIs) | Brazilian official open data, free to use with attribution |
+| OpenStreetMap Nominatim | data © OpenStreetMap contributors, ODbL 1.0 |
+
+No third-party code libraries are used: the page is plain HTML, CSS and JavaScript.
 
 ## Files
 
@@ -107,4 +119,5 @@ The code, the crop reference table and this document were written with Claude Co
 |---|---|
 | `index.html` | the page: form, climate chart, calendar, strategy cards |
 | `modelo.js` | crop table and rotation model |
-| `teste.js` | self-check of the model against live NASA POWER data |
+| `teste.js` | self-check of the model against live NASA POWER and IBGE data |
+| `LICENSE` | Apache License 2.0 |

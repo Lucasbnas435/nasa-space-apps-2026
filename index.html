@@ -1,14 +1,15 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Field Shift - comparar rotações</title>
+<title>Field Shift - compare rotations</title>
 <style>
   :root { --fundo:#f6f4ee; --cartao:#fff; --texto:#1f2a24; --suave:#5d6b63; --borda:#d9d5c8; --verde:#2f6b45; --terra:#a5622b; --alerta:#b3261e; --chuva:#3b7ea1; }
   * { box-sizing: border-box; }
   body { margin:0; background:var(--fundo); color:var(--texto); font:16px/1.5 system-ui, "Segoe UI", sans-serif; }
   main { max-width:1100px; margin:0 auto; padding:24px 16px 64px; }
+  .topo { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; } .idioma { display:flex; align-items:center; gap:8px; margin:0; } .idioma select { width:auto; }
   h1 { font-size:1.6rem; margin:0 0 4px; } h2 { font-size:1.15rem; margin:0 0 12px; } h3 { font-size:1.05rem; margin:0 0 6px; }
   p.sub { color:var(--suave); margin:0 0 20px; }
   section, article { background:var(--cartao); border:1px solid var(--borda); border-radius:10px; padding:16px; margin-bottom:16px; }
@@ -47,26 +48,31 @@
 </style>
 </head>
 <body>
+<!-- Code written with AI assistance (Claude Code, Anthropic), directed and reviewed by the team. -->
 <main>
-  <h1>Field Shift</h1>
-  <p class="sub">Veja em que meses cada cultura vai bem na sua área e compare o que você faz hoje com duas alternativas, usando dez anos de clima da NASA para o seu ponto. A ferramenta apoia a sua decisão e a do agrônomo. Ela não decide por vocês.</p>
+  <div class="topo">
+    <h1>Field Shift</h1>
+    <label class="idioma"><span data-pt="Idioma">Language</span>
+      <select id="lang"><option value="en">English</option><option value="pt">Português (BR)</option></select></label>
+  </div>
+  <p class="sub" data-pt="Veja em que meses cada cultura vai bem na sua área e compare o que você faz hoje com duas alternativas, usando dez anos de clima da NASA para o seu ponto. A ferramenta apoia a sua decisão e a do agrônomo. Ela não decide por vocês.">See in which months each crop fits your land and compare what you do today with two alternatives, using ten years of NASA climate data for your point. The tool supports your decision and your agronomist's. It does not decide for you.</p>
 
   <section>
-    <h2>1. O que você produz</h2>
+    <h2 data-pt="1. O que você produz">1. What you grow</h2>
     <div class="grade">
-      <div><label for="perfil">Tipo de produção</label><select id="perfil"></select></div>
-      <div id="cxPerene" hidden><label for="perene">Cultura perene</label><select id="perene"><option value="cafe">Café arábica</option><option value="banana">Banana</option></select></div>
+      <div><label for="perfil" data-pt="Tipo de produção">Type of production</label><select id="perfil"></select></div>
+      <div id="cxPerene" hidden><label for="perene" data-pt="Cultura perene">Perennial crop</label><select id="perene"></select></div>
     </div>
   </section>
 
   <section>
-    <h2>2. Onde fica a área</h2>
+    <h2 data-pt="2. Onde fica a área">2. Where the land is</h2>
     <div class="grade">
       <div><label for="lat">Latitude</label><input id="lat" type="number" step="0.0001" min="-90" max="90" value="-22.00"></div>
       <div><label for="lon">Longitude</label><input id="lon" type="number" step="0.0001" min="-180" max="180" value="-46.53"></div>
-      <div><label for="alt">Altitude da área em metros</label><input id="alt" type="number" step="10" min="0" max="5000" placeholder="em branco: busca pelo relevo"></div>
+      <div><label for="alt" data-pt="Altitude da área em metros">Altitude of the land, in meters</label><input id="alt" type="number" step="10" min="0" max="5000"></div>
     </div>
-    <small>Padrão: zona rural de Andradas, MG. No Google Maps, clique com o botão direito no talhão para copiar a coordenada. A altitude corrige a temperatura: o dado de clima da NASA é a média de uma área grande, e área mais alta é mais fria. Em branco, a ferramenta busca a altitude no relevo medido pela missão SRTM da NASA.</small>
+    <small data-pt="Padrão: zona rural de Andradas, MG, Brasil. No Google Maps, clique com o botão direito no talhão para copiar a coordenada. A altitude corrige a temperatura: o dado de clima da NASA é a média de uma área grande, e área mais alta é mais fria. Em branco, a ferramenta busca a altitude no relevo medido pela missão SRTM da NASA.">Default: rural Andradas, Minas Gerais, Brazil. In Google Maps, right-click your field to copy the coordinate. Altitude corrects temperature: NASA climate data is the average of a large area, and higher land is colder. If left blank, the tool reads the altitude from the terrain measured by NASA's SRTM mission.</small>
   </section>
 
   <section>
@@ -76,51 +82,75 @@
   </section>
 
   <section>
-    <h2>4. O que pesa mais para você</h2>
+    <h2 data-pt="4. O que pesa mais para você">4. What matters most to you</h2>
     <div class="grade">
-      <div><label for="pClima">Plantar cada cultura no clima certo: <b id="vClima"></b></label><input id="pClima" type="range" min="0" max="10" value="5"></div>
-      <div><label for="pPragas">Quebrar ciclo de pragas e doenças: <b id="vPragas"></b></label><input id="pPragas" type="range" min="0" max="10" value="5"></div>
-      <div><label for="pSolo">Proteger o solo: <b id="vSolo"></b></label><input id="pSolo" type="range" min="0" max="10" value="5"></div>
-      <div><label for="pAgua">Irrigar menos: <b id="vAgua"></b></label><input id="pAgua" type="range" min="0" max="10" value="5"></div>
+      <div><label for="pClima"><span data-pt="Plantar cada cultura no clima certo:">Grow each crop in the right climate:</span> <b id="vClima"></b></label><input id="pClima" type="range" min="0" max="10" value="5"></div>
+      <div><label for="pPragas"><span data-pt="Quebrar ciclo de pragas e doenças:">Break pest and disease cycles:</span> <b id="vPragas"></b></label><input id="pPragas" type="range" min="0" max="10" value="5"></div>
+      <div><label for="pSolo"><span data-pt="Proteger o solo:">Protect the soil:</span> <b id="vSolo"></b></label><input id="pSolo" type="range" min="0" max="10" value="5"></div>
+      <div><label for="pAgua"><span data-pt="Irrigar menos:">Irrigate less:</span> <b id="vAgua"></b></label><input id="pAgua" type="range" min="0" max="10" value="5"></div>
     </div>
   </section>
 
-  <p><button id="ir">Comparar</button><span id="estado" role="status"></span></p>
+  <p><button id="ir" data-pt="Comparar">Compare</button><span id="estado" role="status"></span></p>
 
   <div id="saida"></div>
 </main>
 
 <script src="modelo.js"></script>
 <script>
-const F = FieldShift, $ = id => document.getElementById(id);
+const F = FieldShift, $ = id => document.getElementById(id); // L(pt, en) vem do modelo.js
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-let clima = null, chaveClima = '';
+let clima = null, chaveClima = '', lang = new URLSearchParams(location.search).get('lang') === 'pt' ? 'pt' : 'en';
 
 // formulário: perfil do produtor define a lista de culturas e o exemplo carregado
 const SLOTS = [0, 1, 2, 3, 4, 5];
 const EXEMPLOS = {
-  hortalicas: { rot: [{ c: 'alface', ini: 0 }, { c: 'alface', ini: 2 }, { c: 'brocolis', ini: 4 }, { c: 'repolho', ini: 8 }, { c: 'alface', ini: 13 }, { c: 'brocolis', ini: 15 }],
-    titulo: '3. O que um canteiro recebe hoje (dois anos)', dica: 'Exemplo carregado: alface e brássicas em sequência. Troque pela sequência real do seu canteiro.' },
-  anuais: { rot: [{ c: 'milho', ini: 3 }, { c: 'milho', ini: 15 }],
-    titulo: '3. O que um talhão recebe hoje (dois anos)', dica: 'Exemplo carregado: milho em outubro, dois anos seguidos. Troque pela sequência real do seu talhão.' },
-  perenes: { rot: [],
-    titulo: '3. O que há hoje na entrelinha (dois anos)', dica: 'Cultura perene não entra em rotação. Aqui você informa o que planta entre as linhas. Exemplo carregado: entrelinha sem nada.' },
+  hortalicas: [{ c: 'alface', ini: 0 }, { c: 'alface', ini: 2 }, { c: 'brocolis', ini: 4 }, { c: 'repolho', ini: 8 }, { c: 'alface', ini: 13 }, { c: 'brocolis', ini: 15 }],
+  anuais: [{ c: 'milho', ini: 3 }, { c: 'milho', ini: 15 }],
+  perenes: [],
 };
-$('perfil').innerHTML = Object.entries(F.PERFIS).map(([id, p]) => `<option value="${id}">${esc(p.nome)}</option>`).join('');
-const perfil = () => $('perfil').value, nomeFaixa = () => F.PERFIS[perfil()].faixa;
-function montarSlots() {
-  const ex = EXEMPLOS[perfil()], ops = F.opcoes(perfil());
-  $('cxPerene').hidden = perfil() !== 'perenes';
-  $('tSlots').textContent = ex.titulo;
-  $('dSlots').textContent = 'Deixe em "nada" as linhas que não usar. ' + ex.dica;
+const textoSlots = p => ({
+  hortalicas: [L('3. O que um canteiro recebe hoje (dois anos)', '3. What one bed receives today (two years)'),
+    L('Exemplo carregado: alface e brássicas em sequência. Troque pela sequência real do seu canteiro.', 'Example loaded: lettuce and brassicas in sequence. Replace it with the real sequence of your bed.')],
+  anuais: [L('3. O que um talhão recebe hoje (dois anos)', '3. What one field receives today (two years)'),
+    L('Exemplo carregado: milho em outubro, dois anos seguidos. Troque pela sequência real do seu talhão.', 'Example loaded: maize in October, two years in a row. Replace it with the real sequence of your field.')],
+  perenes: [L('3. O que há hoje na entrelinha (dois anos)', '3. What is between the rows today (two years)'),
+    L('Cultura perene não entra em rotação. Aqui você informa o que planta entre as linhas. Exemplo carregado: entrelinha sem nada.', 'A perennial crop does not rotate. Here you enter what you plant between the rows. Example loaded: nothing between the rows.')],
+}[p]);
+const perfil = () => $('perfil').value || 'hortalicas', nomeFaixa = () => F.faixaNome(perfil());
+const lerSlots = () => SLOTS.map(k => { const c = document.querySelector(`[data-c="${k}"]`); return c ? { c: c.value, ini: +document.querySelector(`[data-i="${k}"]`).value } : null; });
+
+// (Re)monta o formulário no idioma atual. `manter` preserva o que o produtor já escolheu.
+function montarForm(manter) {
+  const p = perfil(), per = $('perene').value || 'cafe', atual = manter ? lerSlots() : EXEMPLOS[p];
+  $('perfil').innerHTML = Object.keys(F.PERFIS).map(id => `<option value="${id}" ${id === p ? 'selected' : ''}>${esc(F.perfilNome(id))}</option>`).join('');
+  $('perene').innerHTML = ['cafe', 'banana'].map(id => `<option value="${id}" ${id === per ? 'selected' : ''}>${esc(F.nome(id))}</option>`).join('');
+  $('cxPerene').hidden = p !== 'perenes';
+  const [titulo, dica] = textoSlots(p), ops = F.opcoes(p);
+  $('tSlots').textContent = titulo;
+  $('dSlots').textContent = L('Deixe em "nada" as linhas que não usar. ', 'Leave unused rows as "nothing". ') + dica;
+  $('alt').placeholder = L('em branco: busca pelo relevo', 'blank: read from terrain');
   $('slots').innerHTML = SLOTS.map(k => `<div class="slot">
-    <select aria-label="Cultura ${k + 1}" data-c="${k}"><option value="">nada</option>${ops.map(id =>
-      `<option value="${id}" ${ex.rot[k]?.c === id ? 'selected' : ''}>${esc(F.CULTURAS[id].nome)}</option>`).join('')}</select>
-    <select aria-label="Mês de plantio ${k + 1}" data-i="${k}">${Array.from({ length: 24 }, (_, i) =>
-      `<option value="${i}" ${ex.rot[k]?.ini === i ? 'selected' : ''}>plantio em ${F.rotulo(i)}</option>`).join('')}</select></div>`).join('');
-  $('saida').innerHTML = '';
+    <select aria-label="${L('Cultura', 'Crop')} ${k + 1}" data-c="${k}"><option value="">${L('nada', 'nothing')}</option>${ops.map(id =>
+      `<option value="${id}" ${atual[k]?.c === id ? 'selected' : ''}>${esc(F.nome(id))}</option>`).join('')}</select>
+    <select aria-label="${L('Mês de plantio', 'Planting month')} ${k + 1}" data-i="${k}">${Array.from({ length: 24 }, (_, i) =>
+      `<option value="${i}" ${atual[k]?.ini === i ? 'selected' : ''}>${L('plantio em', 'planted in')} ${F.rotulo(i)}</option>`).join('')}</select></div>`).join('');
 }
-$('perfil').addEventListener('change', montarSlots); montarSlots();
+
+// Troca o idioma: textos fixos pelo atributo data-pt, o resto é redesenhado.
+function aplicarIdioma() {
+  F.setLang(lang); document.documentElement.lang = lang === 'pt' ? 'pt-BR' : 'en'; $('lang').value = lang;
+  document.title = L('Field Shift - comparar rotações', 'Field Shift - compare rotations');
+  for (const el of document.querySelectorAll('[data-pt]')) {
+    if (!el.dataset.en) el.dataset.en = el.textContent;
+    el.textContent = lang === 'pt' ? el.dataset.pt : el.dataset.en;
+  }
+  montarForm(true);
+  if (clima) desenhar();
+}
+$('lang').addEventListener('change', () => { lang = $('lang').value; aplicarIdioma(); });
+$('perfil').addEventListener('change', () => { montarForm(false); $('saida').innerHTML = ''; });
+F.setLang(lang); montarForm(false); aplicarIdioma();
 
 for (const k of ['Clima', 'Pragas', 'Solo', 'Agua']) {
   const mostra = () => { $('v' + k).textContent = $('p' + k).value; if (clima) desenhar(); };
@@ -128,52 +158,68 @@ for (const k of ['Clima', 'Pragas', 'Solo', 'Agua']) {
 }
 
 function lerRotacao() {
-  const rot = SLOTS.map(k => ({ c: document.querySelector(`[data-c="${k}"]`).value, ini: +document.querySelector(`[data-i="${k}"]`).value })).filter(it => it.c);
-  if (!rot.length && perfil() !== 'perenes') throw new Error('Informe pelo menos uma cultura.');
+  const rot = lerSlots().filter(it => it && it.c);
+  if (!rot.length && perfil() !== 'perenes') throw new Error(L('Informe pelo menos uma cultura.', 'Enter at least one crop.'));
   const usados = rot.flatMap(it => Array.from({ length: F.CULTURAS[it.c].ciclo }, (_, k) => it.ini + k));
-  if (new Set(usados).size !== usados.length) throw new Error('Duas culturas ocupam o mesmo mês. Ajuste os meses de plantio.');
-  if (usados.some(i => i > 23)) throw new Error('Uma cultura passa do fim dos dois anos. Plante mais cedo.');
+  if (new Set(usados).size !== usados.length) throw new Error(L('Duas culturas ocupam o mesmo mês. Ajuste os meses de plantio.', 'Two crops occupy the same month. Adjust the planting months.'));
+  if (usados.some(i => i > 23)) throw new Error(L('Uma cultura passa do fim dos dois anos. Plante mais cedo.', 'One crop runs past the end of the two years. Plant it earlier.'));
   return perfil() === 'perenes' ? [{ c: $('perene').value, ini: 0 }, ...rot] : rot;
 }
 
 // Município pela coordenada (OpenStreetMap) e área colhida por cultura (IBGE, Produção Agrícola Municipal).
 // A coordenada vai arredondada a duas casas (cerca de 1 km): basta para achar o município.
-let painelMun = '', chaveMun = '';
-const semAcento = t => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+let mun = null, chaveMun = ''; // mun: { lav } | { erro: 'fora' | 'falha' }
+const semAcento = t => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 async function buscarMunicipio(lat, lon) {
   const chave = lat.toFixed(2) + ',' + lon.toFixed(2);
   if (chave === chaveMun) return;
-  chaveMun = chave; painelMun = '';
+  chaveMun = chave; mun = null;
   try {
     const g = await (await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=10&accept-language=pt-BR&lat=${lat.toFixed(2)}&lon=${lon.toFixed(2)}`)).json();
     const a = g.address || {};
-    if (a.country_code !== 'br') { painelMun = '<section><h2>O que se planta no seu município</h2><p>Dado disponível só para o Brasil (fonte: IBGE).</p></section>'; return; }
+    if (a.country_code !== 'br') { mun = { erro: 'fora' }; return; }
     const uf = (a['ISO3166-2-lvl4'] || '').split('-')[1], nome = a.municipality || a.city || a.town || a.village || '';
     const lista = await (await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios`)).json();
-    const mun = lista.find(m => semAcento(m.nome) === semAcento(nome));
-    if (!mun) throw new Error('município não encontrado');
-    const lav = F.resumirLavouras(await (await fetch(`https://apisidra.ibge.gov.br/values/t/5457/n6/${mun.id}/v/216/p/last%201/c782/all`)).json());
+    const m = lista.find(x => semAcento(x.nome) === semAcento(nome));
+    if (!m) throw new Error('município não encontrado');
+    const lav = F.resumirLavouras(await (await fetch(`https://apisidra.ibge.gov.br/values/t/5457/n6/${m.id}/v/216/p/last%201/c782/all`)).json());
     if (!lav.total) throw new Error('sem dado');
-    const topo = lav.itens[0], pc = v => Math.round(v * 100) + '%', ha = v => v.toLocaleString('pt-BR') + ' ha';
-    painelMun = `<section><h2>O que se planta em ${esc(lav.municipio)}</h2>
-      <p>${topo.parte >= 0.5 ? `${esc(topo.nome)} ocupa ${pc(topo.parte)} da área colhida do município: é uma região de monocultura.`
-        : `A cultura com mais área é ${esc(topo.nome.toLowerCase())}, com ${pc(topo.parte)} da área colhida do município.`}</p>
-      <div class="mun">${lav.itens.slice(0, 8).map(i => `<span>${esc(i.nome)}</span><i style="width:${100 * i.ha / topo.ha}%"></i><span>${ha(i.ha)} (${pc(i.parte)})</span>`).join('')}</div>
-      <p><small>Fonte: IBGE, Produção Agrícola Municipal ${esc(lav.ano)}, área colhida. Total do município: ${ha(lav.total)}, em ${lav.itens.length} culturas.</small></p></section>`;
-  } catch (e) { painelMun = '<section><h2>O que se planta no seu município</h2><p>Não consegui consultar o IBGE agora. O restante da análise não depende disso.</p></section>'; }
+    mun = { lav };
+  } catch (e) { mun = { erro: 'falha' }; }
+}
+// Nomes das lavouras do IBGE em inglês; o que não estiver aqui aparece no nome original.
+const LAVOURA_EN = { 'Café': 'Coffee', 'Milho': 'Maize', 'Banana': 'Banana', 'Soja': 'Soybean', 'Batata-inglesa': 'Potato', 'Abóbora': 'Squash', 'Trigo': 'Wheat',
+  'Feijão': 'Beans', 'Cenoura': 'Carrot', 'Uva': 'Grape', 'Batata-doce': 'Sweet potato', 'Alface': 'Lettuce', 'Tomate': 'Tomato', 'Cana-de-açúcar': 'Sugarcane',
+  'Laranja': 'Orange', 'Mandioca': 'Cassava', 'Arroz': 'Rice', 'Algodão herbáceo': 'Cotton', 'Cebola': 'Onion', 'Alho': 'Garlic', 'Sorgo': 'Sorghum', 'Aveia': 'Oats',
+  'Limão': 'Lemon', 'Tangerina': 'Tangerine', 'Abacate': 'Avocado', 'Manga': 'Mango', 'Maracujá': 'Passion fruit', 'Goiaba': 'Guava', 'Pêssego': 'Peach',
+  'Amendoim': 'Peanut', 'Mamão': 'Papaya', 'Melancia': 'Watermelon', 'Abacaxi': 'Pineapple', 'Morango': 'Strawberry', 'Repolho': 'Cabbage', 'Pimentão': 'Bell pepper',
+  'Cacau': 'Cocoa', 'Girassol': 'Sunflower', 'Cevada': 'Barley', 'Ervilha': 'Pea', 'Fumo': 'Tobacco', 'Maçã': 'Apple', 'Pera': 'Pear', 'Figo': 'Fig', 'Caqui': 'Persimmon' };
+function painelMunicipio() {
+  if (!mun) return '';
+  const h = t => `<section><h2>${L('O que se planta no seu município', 'What is grown in your municipality')}</h2><p>${t}</p></section>`;
+  if (mun.erro === 'fora') return h(L('Dado disponível só para o Brasil (fonte: IBGE).', 'Data available for Brazil only (source: IBGE, the Brazilian statistics office).'));
+  if (mun.erro) return h(L('Não consegui consultar o IBGE agora. O restante da análise não depende disso.', 'Could not reach IBGE right now. The rest of the analysis does not depend on it.'));
+  const lav = mun.lav, topo = lav.itens[0], pc = v => Math.round(v * 100) + '%', ha = v => v.toLocaleString(lang === 'pt' ? 'pt-BR' : 'en-US') + ' ha';
+  const n = x => L(x.nome, LAVOURA_EN[x.nome] || x.nome);
+  return `<section><h2>${L('O que se planta em', 'What is grown in')} ${esc(lav.municipio)}</h2>
+    <p>${topo.parte >= 0.5 ? L(`${esc(n(topo))} ocupa ${pc(topo.parte)} da área colhida do município: é uma região de monocultura.`, `${esc(n(topo))} takes ${pc(topo.parte)} of the harvested area of the municipality: this is a monoculture region.`)
+      : L(`A cultura com mais área é ${esc(n(topo).toLowerCase())}, com ${pc(topo.parte)} da área colhida do município.`, `The crop with the largest area is ${esc(n(topo).toLowerCase())}, with ${pc(topo.parte)} of the harvested area of the municipality.`)}</p>
+    <div class="mun">${lav.itens.slice(0, 8).map(i => `<span>${esc(n(i))}</span><i style="width:${100 * i.ha / topo.ha}%"></i><span>${ha(i.ha)} (${pc(i.parte)})</span>`).join('')}</div>
+    <p><small>${L(`Fonte: IBGE, Produção Agrícola Municipal ${esc(lav.ano)}, área colhida. Total do município: ${ha(lav.total)}, em ${lav.itens.length} culturas.`,
+      `Source: IBGE (Brazilian statistics office), Municipal Agricultural Production ${esc(lav.ano)}, harvested area. Municipality total: ${ha(lav.total)}, across ${lav.itens.length} crops.`)}</small></p></section>`;
 }
 
 // Altitude do ponto pelo modelo de relevo SRTM da NASA, servido pela Open-Elevation. Só quando o campo está vazio.
-let altFonte = '';
+let altSrtm = false;
 async function buscarAltitude(lat, lon) {
-  if (+$('alt').value > 0) { if (!altFonte) altFonte = 'informada por você'; return; }
+  if (+$('alt').value > 0) return;
   try {
     const j = await (await fetch(`https://api.open-elevation.com/api/v1/lookup?locations=${lat.toFixed(3)},${lon.toFixed(3)}`)).json();
     const m = Math.round(j.results[0].elevation);
-    if (m > 0) { $('alt').value = m; altFonte = 'relevo SRTM da NASA'; }
-  } catch (e) { altFonte = ''; }
+    if (m > 0) { $('alt').value = m; altSrtm = true; }
+  } catch (e) { altSrtm = false; }
 }
-$('alt').addEventListener('input', () => { altFonte = 'informada por você'; });
+$('alt').addEventListener('input', () => { altSrtm = false; });
 
 let bruto = null;
 async function buscarClima(lat, lon) {
@@ -181,7 +227,7 @@ async function buscarClima(lat, lon) {
   if (bruto && chave === chaveClima) { clima = F.resumirClima(bruto, alt); return; }
   const url = `https://power.larc.nasa.gov/api/temporal/monthly/point?parameters=PRECTOTCORR,T2M,T2M_MAX,T2M_MIN&community=AG&longitude=${lon}&latitude=${lat}&start=2015&end=2024&format=JSON`;
   const r = await fetch(url);
-  if (!r.ok) throw new Error('A NASA POWER não respondeu (código ' + r.status + '). Tente de novo em instantes.');
+  if (!r.ok) throw new Error(L(`A NASA POWER não respondeu (código ${r.status}). Tente de novo em instantes.`, `NASA POWER did not respond (code ${r.status}). Try again in a moment.`));
   bruto = await r.json(); clima = F.resumirClima(bruto, alt); chaveClima = chave;
 }
 
@@ -189,9 +235,9 @@ $('ir').addEventListener('click', async () => {
   const lat = +$('lat').value, lon = +$('lon').value;
   $('estado').className = '';
   try {
-    if (!(lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180)) throw new Error('Coordenada inválida.');
+    if (!(lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180)) throw new Error(L('Coordenada inválida.', 'Invalid coordinate.'));
     lerRotacao();
-    $('ir').disabled = true; $('estado').textContent = 'Buscando dez anos de clima na NASA...';
+    $('ir').disabled = true; $('estado').textContent = L('Buscando dez anos de clima na NASA...', 'Fetching ten years of climate data from NASA...');
     await buscarAltitude(lat, lon);
     await buscarClima(lat, lon);
     desenhar();
@@ -200,93 +246,106 @@ $('ir').addEventListener('click', async () => {
   $('ir').disabled = false;
 });
 
-const mm = v => Math.round(v) + ' mm', gr = v => v.toFixed(1).replace('.', ',') + ' °C';
-const curto = id => F.CULTURAS[id].nome.split(' (')[0];
+const mm = v => Math.round(v) + ' mm', gr = v => (lang === 'pt' ? v.toFixed(1).replace('.', ',') : v.toFixed(1)) + ' °C';
+const curto = id => F.nome(id).split(' (')[0];
 function linhaDoTempo(av) {
   const cel = Array(24).fill('<div></div>');
   for (const it of av.itens.filter(i => !F.ehPerene(i))) { const c = F.CULTURAS[it.c];
     it.status.forEach((st, k) => { const i = it.ini + k;
-      cel[i] = `<div class="${c.cobertura ? 'cob' : 'com'} ${st.s === 'risco' ? 'r' : st.s === 'atencao' ? 'a' : ''}" title="${esc(c.nome)} - ${F.rotulo(i)}${st.motivo ? ': ' + esc(st.motivo) : ''}">${k ? '' : esc(curto(it.c).split(' ')[0])}</div>`; }); }
+      cel[i] = `<div class="${c.cobertura ? 'cob' : 'com'} ${st.s === 'risco' ? 'r' : st.s === 'atencao' ? 'a' : ''}" title="${esc(F.nome(it.c))} - ${F.rotulo(i)}${st.motivo ? ': ' + esc(st.motivo) : ''}">${k ? '' : esc(curto(it.c).split(' ').slice(0, c.cobertura ? 2 : 1).join(' '))}</div>`; }); }
   const per = av.itens.find(F.ehPerene);
-  const linhaPerene = per ? `<small>${esc(F.CULTURAS[per.c].nome)}, os 24 meses (cor = encaixe no clima); abaixo, a entrelinha:</small>
-    <div class="linha" role="img" aria-label="Cultura perene mês a mês">${per.status.map((st, i) => `<div class="${st.s}" title="${F.rotulo(i)}${st.motivo ? ': ' + esc(st.motivo) : ''}"></div>`).join('')}</div>` : '';
-  return `${linhaPerene}<div class="linha" role="img" aria-label="Linha do tempo de 24 meses">${cel.join('')}</div>
+  const linhaPerene = per ? `<small>${esc(F.nome(per.c))}${L(', os 24 meses (cor = encaixe no clima); abaixo, a entrelinha:', ', all 24 months (color = climate fit); below it, the inter-row:')}</small>
+    <div class="linha" role="img" aria-label="${L('Cultura perene mês a mês', 'Perennial crop month by month')}">${per.status.map((st, i) => `<div class="${st.s}" title="${F.rotulo(i)}${st.motivo ? ': ' + esc(st.motivo) : ''}"></div>`).join('')}</div>` : '';
+  return `${linhaPerene}<div class="linha" role="img" aria-label="${L('Linha do tempo de 24 meses', '24-month timeline')}">${cel.join('')}</div>
     <div class="linha eixo">${Array.from({ length: 24 }, (_, i) => `<div>${F.MESES[F.mesCal(i)][0].toUpperCase()}</div>`).join('')}</div>`;
 }
 
 function cartao(e, base, melhor) {
   const av = e.av, b = base.av, ev = [], ben = [], ris = [], fx = nomeFaixa();
-  ev.push(`${av.mesesCom - av.mesesRisco - av.mesesAtencao} de ${av.mesesCom} meses de cultura dentro da faixa de temperatura de referência; ${av.mesesAtencao} no limite e ${av.mesesRisco} fora.`);
-  ev.push(av.perene ? (av.familias > 1 ? `${av.familias} famílias de planta convivem na área ao longo dos dois anos.` : 'Uma única família de planta na área: monocultura pura.')
-    : av.repeticoes ? `${av.repeticoes} vez(es) a mesma família de planta entra em sequência no ${fx}.` : 'Nenhuma família de planta se repete em sequência.');
-  ev.push(`${av.mesesSoloNu} de 24 meses com ${av.perene ? 'a entrelinha descoberta' : 'o ' + fx + ' vazio'}; nesses meses caem em média ${mm(av.chuvaSoloNu)} de chuva sobre solo descoberto (${Math.round(100 * av.chuvaSoloNu / av.chuvaTotal)}% da chuva do período).`);
-  ev.push(`Irrigação estimada: ${mm(av.irrigacao)} em dois anos, contando ${F.AGUA_MES} mm por mês de cultura menos a chuva média.`);
+  const naFaixa = av.mesesCom - av.mesesRisco - av.mesesAtencao, pcSolo = Math.round(100 * av.chuvaSoloNu / av.chuvaTotal);
+  ev.push(L(`${naFaixa} de ${av.mesesCom} meses de cultura dentro da faixa de temperatura de referência; ${av.mesesAtencao} no limite e ${av.mesesRisco} fora.`,
+    `${naFaixa} of ${av.mesesCom} crop-months inside the reference temperature range; ${av.mesesAtencao} at the edge and ${av.mesesRisco} outside.`));
+  ev.push(av.perene
+    ? (av.familias > 1 ? L(`${av.familias} famílias de planta convivem na área ao longo dos dois anos.`, `${av.familias} plant families share the area over the two years.`)
+      : L('Uma única família de planta na área: monocultura pura.', 'A single plant family in the area: pure monoculture.'))
+    : av.repeticoes ? L(`${av.repeticoes} vez(es) a mesma família de planta entra em sequência no ${fx}.`, `The same plant family comes in sequence ${av.repeticoes} time(s) in the ${fx}.`)
+      : L('Nenhuma família de planta se repete em sequência.', 'No plant family repeats in sequence.'));
+  ev.push(L(`${av.mesesSoloNu} de 24 meses com ${av.perene ? 'a entrelinha descoberta' : 'o ' + fx + ' vazio'}; nesses meses caem em média ${mm(av.chuvaSoloNu)} de chuva sobre solo descoberto (${pcSolo}% da chuva do período).`,
+    `${av.mesesSoloNu} of 24 months with ${av.perene ? 'the inter-row bare' : 'the ' + fx + ' empty'}; in those months an average of ${mm(av.chuvaSoloNu)} of rain falls on bare soil (${pcSolo}% of the rainfall in the period).`));
+  ev.push(L(`Irrigação estimada: ${mm(av.irrigacao)} em dois anos, contando ${F.AGUA_MES} mm por mês de cultura menos a chuva média.`,
+    `Estimated irrigation: ${mm(av.irrigacao)} over two years, counting ${F.AGUA_MES} mm per crop-month minus mean rainfall.`));
   for (const it of av.itens) {
-    if (it.antes) ev.push(`${curto(it.c)} entra em ${F.rotulo(it.ini)} no lugar de ${curto(it.antes)}.`);
+    if (it.antes) ev.push(L(`${curto(it.c)} entra em ${F.rotulo(it.ini)} no lugar de ${curto(it.antes)}.`, `${curto(it.c)} comes in ${F.rotulo(it.ini)} in place of ${curto(it.antes).toLowerCase()}.`));
     const motivos = [...new Set(it.status.filter(st => st.s !== 'bom').map(st => st.motivo))];
-    if (motivos.length) ris.push(`${curto(it.c)} (${F.ehPerene(it) ? 'os 24 meses' : F.rotulo(it.ini)}): ${motivos.join('; ')}.`);
+    if (motivos.length) ris.push(`${curto(it.c)} (${F.ehPerene(it) ? L('os 24 meses', 'all 24 months') : F.rotulo(it.ini)}): ${motivos.join('; ')}.`);
   }
   const secos = av.perene ? av.itens.filter(it => it.mesesSecos.length) : [];
-  if (secos.length) ris.push(`${secos.length} plantio(s) na entrelinha passam por mês com menos de ${F.MES_SECO} mm de chuva. Roçar ou dessecar antes da seca, para a planta da entrelinha não disputar água com a cultura principal.`);
+  if (secos.length) ris.push(L(`${secos.length} plantio(s) na entrelinha passam por mês com menos de ${F.MES_SECO} mm de chuva. Roçar ou dessecar antes da seca, para a planta da entrelinha não disputar água com a cultura principal.`,
+    `${secos.length} inter-row planting(s) go through months with less than ${F.MES_SECO} mm of rain. Mow or terminate them before the dry season, so they do not compete for water with the main crop.`));
   if (e.id !== 'atual') {
-    if (av.perene && av.familias > b.familias) ben.push(`${av.familias - b.familias} família(s) de planta a mais na área, o que reduz a pressão de pragas e doenças da monocultura.`);
-    if (av.repeticoes < b.repeticoes) ben.push(`${b.repeticoes - av.repeticoes} repetição(ões) de família a menos, o que dificulta a vida de pragas e doenças que dependem dela.`);
-    if (av.mesesRisco + av.mesesAtencao < b.mesesRisco + b.mesesAtencao) ben.push(`${b.mesesRisco + b.mesesAtencao - av.mesesRisco - av.mesesAtencao} meses a menos de cultura fora ou no limite da faixa de temperatura.`);
-    if (av.mesesSoloNu < b.mesesSoloNu) ben.push(`${b.mesesSoloNu - av.mesesSoloNu} meses a menos de ${av.perene ? 'entrelinha descoberta' : fx + ' vazio'}.`);
-    if (av.irrigacao < b.irrigacao - 20) ben.push(`Cerca de ${mm(b.irrigacao - av.irrigacao)} a menos de irrigação.`);
-    if (!ben.length) ben.push('Sem ganho medido sobre a rotação atual com os dados disponíveis.');
-    if (av.itens.some(it => it.antes)) ris.push(`A troca muda o que o ${fx} entrega. Conferir com o planejamento de vendas se o volume de cada produto continua atendido por outras áreas.`);
-    ris.push('Custo de semente, mão de obra e época de semeadura do adubo verde não entram na conta.');
+    const dFam = av.familias - b.familias, dRep = b.repeticoes - av.repeticoes, dClima = b.mesesRisco + b.mesesAtencao - av.mesesRisco - av.mesesAtencao, dSolo = b.mesesSoloNu - av.mesesSoloNu;
+    if (av.perene && dFam > 0) ben.push(L(`${dFam} família(s) de planta a mais na área, o que reduz a pressão de pragas e doenças da monocultura.`, `${dFam} more plant family(ies) in the area, which lowers the pest and disease pressure of a monoculture.`));
+    if (dRep > 0) ben.push(L(`${dRep} repetição(ões) de família a menos, o que dificulta a vida de pragas e doenças que dependem dela.`, `${dRep} fewer family repetition(s), which makes life harder for the pests and diseases that depend on that family.`));
+    if (dClima > 0) ben.push(L(`${dClima} meses a menos de cultura fora ou no limite da faixa de temperatura.`, `${dClima} fewer crop-months outside or at the edge of the temperature range.`));
+    if (dSolo > 0) ben.push(L(`${dSolo} meses a menos de ${av.perene ? 'entrelinha descoberta' : fx + ' vazio'}.`, `${dSolo} fewer months with ${av.perene ? 'the inter-row bare' : 'the ' + fx + ' empty'}.`));
+    if (av.irrigacao < b.irrigacao - 20) ben.push(L(`Cerca de ${mm(b.irrigacao - av.irrigacao)} a menos de irrigação.`, `About ${mm(b.irrigacao - av.irrigacao)} less irrigation.`));
+    if (!ben.length) ben.push(L('Sem ganho medido sobre a rotação atual com os dados disponíveis.', 'No measured gain over the current rotation with the data available.'));
+    if (av.itens.some(it => it.antes)) ris.push(L(`A troca muda o que o ${fx} entrega. Conferir com o planejamento de vendas se o volume de cada produto continua atendido por outras áreas.`,
+      `The swap changes what the ${fx} delivers. Check with sales planning whether the volume of each product is still covered by other areas.`));
+    ris.push(L('Custo de semente, mão de obra e época de semeadura do adubo verde não entram na conta.', 'Seed cost, labor and the sowing season of the green manure are not part of the calculation.'));
   }
   const lista = a => `<ul>${a.map(t => `<li>${esc(t)}</li>`).join('')}</ul>`;
   return `<article class="${melhor ? 'melhor' : ''}">
-    ${melhor ? '<span class="selo">Melhor nota para as suas prioridades</span>' : ''}
+    ${melhor ? `<span class="selo">${L('Melhor nota para as suas prioridades', 'Best score for your priorities')}</span>` : ''}
     <h3>${esc(e.titulo)} <span class="nota">${Math.round(e.nota * 100)}/100</span></h3>
     ${linhaDoTempo(av)}
-    <dl><dt>Por que aparece aqui</dt><dd>${esc(e.porque)}</dd>
-    <dt>Evidência (NASA POWER, 2015 a 2024)</dt><dd>${lista(ev)}</dd>
-    ${ben.length ? `<dt>Benefícios sobre a atual</dt><dd>${lista(ben)}</dd>` : ''}
-    <dt>Riscos para revisar no local</dt><dd>${ris.length ? lista(ris) : 'Nenhum risco apontado pelos dados de clima. Isso não dispensa a revisão do agrônomo.'}</dd></dl>
+    <dl><dt>${L('Por que aparece aqui', 'Why it is suggested')}</dt><dd>${esc(e.porque)}</dd>
+    <dt>${L('Evidência (NASA POWER, 2015 a 2024)', 'Evidence (NASA POWER, 2015 to 2024)')}</dt><dd>${lista(ev)}</dd>
+    ${ben.length ? `<dt>${L('Benefícios sobre a atual', 'Benefits over the current one')}</dt><dd>${lista(ben)}</dd>` : ''}
+    <dt>${L('Riscos para revisar no local', 'Risks that need local review')}</dt><dd>${ris.length ? lista(ris) : L('Nenhum risco apontado pelos dados de clima. Isso não dispensa a revisão do agrônomo.', 'No risk flagged by the climate data. This does not replace review by an agronomist.')}</dd></dl>
   </article>`;
 }
 
 function desenhar() {
   let rot; try { rot = lerRotacao(); } catch (e) { return; }
   const pesos = { clima: +$('pClima').value, pragas: +$('pPragas').value, solo: +$('pSolo').value, agua: +$('pAgua').value };
-  const est = F.comparar(rot, clima, pesos), topo = Math.max(...est.map(e => e.nota)), max = Math.max(...clima.chuvaMedia);
-  const frios = clima.tminAbs.map((t, m) => (t < F.LIMITE_GEADA ? F.MESES[m] : '')).filter(Boolean);
-  const quente = clima.tMedia.indexOf(Math.max(...clima.tMedia));
+  const est = F.comparar(rot, clima, pesos), topo = Math.max(...est.map(e => e.nota)), max = Math.max(...clima.chuvaMedia), MS = F.MESES;
+  const frios = clima.tminAbs.map((t, m) => (t < F.LIMITE_GEADA ? MS[m] : '')).filter(Boolean);
+  const quente = clima.tMedia.indexOf(Math.max(...clima.tMedia)), anual = mm(clima.chuvaMedia.reduce((a, b) => a + b, 0)), cel = Math.round(clima.altitude);
   const cal = F.calendario(clima, perfil()), anoTodo = cal.filter(l => l.meses.every(m => m.s === 'bom')).length;
+  const fonteAlt = altSrtm ? L('relevo SRTM da NASA', 'NASA SRTM terrain') : L('informada por você', 'entered by you');
   $('saida').innerHTML = `<section>
-      <h2>Clima do ponto (${clima.anos} anos, 2015 a 2024)</h2>
-      <div class="barras" role="img" aria-label="Chuva média por mês">${clima.chuvaMedia.map((v, m) =>
-        `<div style="height:${100 * v / max}%" title="${F.MESES[m]}: média ${mm(v)}, ano mais seco ${mm(clima.chuvaSeca[m])}"><i style="height:${100 * clima.chuvaSeca[m] / v}%"></i></div>`).join('')}</div>
-      <div class="eixo12">${F.MESES.map((m, i) => `<div>${m}<br>${clima.tMedia[i].toFixed(0)}°</div>`).join('')}</div>
-      <p><small>Barra clara: chuva média do mês. Parte escura: o ano mais seco. Abaixo do mês, a temperatura média. Total de chuva no ano: ${mm(clima.chuvaMedia.reduce((a, b) => a + b, 0))}.
-      Mês mais quente: ${F.MESES[quente]} (${gr(clima.tMedia[quente])}). Mínima registrada abaixo de ${F.LIMITE_GEADA} °C em: ${frios.join(', ') || 'nenhum mês'}.
-      ${clima.ajuste ? `Temperatura corrigida em ${gr(clima.ajuste)} para ${$('alt').value} m (altitude ${altFonte || 'informada'}); a célula da NASA está a ${Math.round(clima.altitude)} m.` : `Sem correção de altitude: o dado vale para ${Math.round(clima.altitude)} m.`}</small></p>
+      <h2>${L(`Clima do ponto (${clima.anos} anos, 2015 a 2024)`, `Climate at your point (${clima.anos} years, 2015 to 2024)`)}</h2>
+      <div class="barras" role="img" aria-label="${L('Chuva média por mês', 'Mean rainfall per month')}">${clima.chuvaMedia.map((v, m) =>
+        `<div style="height:${100 * v / max}%" title="${MS[m]}: ${L('média', 'mean')} ${mm(v)}, ${L('ano mais seco', 'driest year')} ${mm(clima.chuvaSeca[m])}"><i style="height:${100 * clima.chuvaSeca[m] / v}%"></i></div>`).join('')}</div>
+      <div class="eixo12">${MS.map((m, i) => `<div>${m}<br>${clima.tMedia[i].toFixed(0)}°</div>`).join('')}</div>
+      <p><small>${L(`Barra clara: chuva média do mês. Parte escura: o ano mais seco. Abaixo do mês, a temperatura média. Total de chuva no ano: ${anual}. Mês mais quente: ${MS[quente]} (${gr(clima.tMedia[quente])}). Mínima registrada abaixo de ${F.LIMITE_GEADA} °C em: ${frios.join(', ') || 'nenhum mês'}.`,
+        `Light bar: mean rainfall of the month. Dark part: the driest year. Below each month, the mean temperature. Total rainfall per year: ${anual}. Warmest month: ${MS[quente]} (${gr(clima.tMedia[quente])}). Lowest temperature on record below ${F.LIMITE_GEADA} °C in: ${frios.join(', ') || 'no month'}.`)}
+      ${clima.ajuste ? L(`Temperatura corrigida em ${gr(clima.ajuste)} para ${$('alt').value} m (altitude: ${fonteAlt}); a célula da NASA está a ${cel} m.`, `Temperature corrected by ${gr(clima.ajuste)} for ${$('alt').value} m (altitude: ${fonteAlt}); the NASA grid cell sits at ${cel} m.`)
+        : L(`Sem correção de altitude: o dado vale para ${cel} m.`, `No altitude correction: the data holds for ${cel} m.`)}</small></p>
     </section>
     <section>
-      <h2>Quando cada produto vai bem em campo neste ponto</h2>
-      <p>${anoTodo} de ${cal.length} culturas ficam dentro da faixa de temperatura nos doze meses. Para as outras, os meses em amarelo e vermelho pedem cultivar de verão, cultivo protegido, outra área ou pausa.</p>
-      <div class="rolagem"><table class="cal"><thead><tr><th></th>${F.MESES.map(m => `<th scope="col">${m}</th>`).join('')}</tr></thead><tbody>
-      ${cal.map(l => `<tr><th scope="row">${esc(F.CULTURAS[l.id].nome)}</th>${l.meses.map(m => `<td class="${m.s}" title="${esc(m.motivo || 'dentro da faixa')}"><span hidden>${m.s}</span></td>`).join('')}</tr>`).join('')}
+      <h2>${L('Quando cada produto vai bem em campo neste ponto', 'When each crop fits the climate at this point')}</h2>
+      <p>${L(`${anoTodo} de ${cal.length} culturas ficam dentro da faixa de temperatura nos doze meses. Para as outras, os meses em amarelo e vermelho pedem cultivar de verão ou de inverno, cultivo protegido, outra área ou pausa.`,
+        `${anoTodo} of ${cal.length} crops stay inside their temperature range all twelve months. For the others, yellow and red months call for a summer or winter cultivar, protected cultivation, another area or a pause.`)}</p>
+      <div class="rolagem"><table class="cal"><thead><tr><th></th>${MS.map(m => `<th scope="col">${m}</th>`).join('')}</tr></thead><tbody>
+      ${cal.map(l => `<tr><th scope="row">${esc(F.nome(l.id))}</th>${l.meses.map(m => `<td class="${m.s}" title="${esc(m.motivo || L('dentro da faixa', 'inside the range'))}"><span hidden>${m.s}</span></td>`).join('')}</tr>`).join('')}
       </tbody></table></div>
-      <p class="legenda"><small><span class="bom" style="margin-left:0"></span>dentro da faixa<span class="atencao"></span>no limite ou chuva forte<span class="risco"></span>fora da faixa ou geada. Passe o mouse no quadrado para ver o motivo.</small></p>
+      <p class="legenda"><small><span class="bom" style="margin-left:0"></span>${L('dentro da faixa', 'inside the range')}<span class="atencao"></span>${L('no limite ou chuva forte', 'at the edge, or heavy rain')}<span class="risco"></span>${L('fora da faixa ou geada. Passe o mouse no quadrado para ver o motivo.', 'outside the range, or frost. Hover a square to see the reason.')}</small></p>
     </section>
-    ${painelMun}
-    <h2>${perfil() === 'perenes' ? 'Entrelinha' : 'Rotação do ' + nomeFaixa()}: três caminhos</h2>
+    ${painelMunicipio()}
+    <h2>${perfil() === 'perenes' ? L('Entrelinha: três caminhos', 'Between the rows: three paths') : L(`Rotação do ${nomeFaixa()}: três caminhos`, `Rotation of the ${nomeFaixa()}: three paths`)}</h2>
     ${est.map(e => cartao(e, est[0], e.nota === topo && e.id !== 'atual')).join('')}
     <section class="aviso">
-      <h2>O que esta ferramenta não sabe</h2>
+      <h2>${L('O que esta ferramenta não sabe', 'What this tool does not know')}</h2>
       <ul>
-        <li>O clima vem de uma grade de cerca de 50 km, com altitude média de ${Math.round(clima.altitude)} m. Informe a altitude da área para corrigir a temperatura; chuva não é corrigida.</li>
-        <li>A faixa de temperatura e o ciclo de cada cultura são valores gerais, ainda sem revisão de um agrônomo da região. Cultivares de verão e de inverno mudam essas faixas.</li>
-        <li>Dentro da estufa a temperatura é mais alta que a do ar de fora. Para as culturas de estufa, a ferramenta usa a temperatura externa.</li>
-        <li>Não há análise de solo, declividade nem histórico de pragas da área.</li>
-        <li>Para café e banana, a ferramenta olha só a entrelinha. Espaçamento, idade da lavoura, sombra da copa e mecanização decidem se cabe plantar ali, e nada disso entra na conta.</li>
-        <li>Preço, custo e demanda de cada produto não entram. A nota mede clima, alternância de famílias, cobertura do solo e irrigação.</li>
-        <li>Dez anos de clima passado não garantem o próximo.</li>
+        <li>${L(`O clima vem de uma grade de cerca de 50 km, com altitude média de ${cel} m. A temperatura é corrigida pela altitude da área; a chuva não é.`, `Climate comes from a grid of about 50 km, with a mean altitude of ${cel} m. Temperature is corrected for the altitude of your land; rainfall is not.`)}</li>
+        <li>${L('A faixa de temperatura e o ciclo de cada cultura são valores gerais, ainda sem revisão de um agrônomo da região. Cultivares de verão e de inverno mudam essas faixas.', 'The temperature range and cycle length of each crop are general reference values, not yet reviewed by a local agronomist. Summer and winter cultivars shift these ranges.')}</li>
+        <li>${L('Dentro da estufa a temperatura é mais alta que a do ar de fora. Para as culturas de estufa, a ferramenta usa a temperatura externa.', 'Inside a greenhouse the temperature is higher than the outside air. For greenhouse crops, the tool uses the outside temperature.')}</li>
+        <li>${L('Não há análise de solo, declividade nem histórico de pragas da área.', 'There is no soil analysis, slope or pest history of the area.')}</li>
+        <li>${L('Para café e banana, a ferramenta olha só a entrelinha. Espaçamento, idade da lavoura, sombra da copa e mecanização decidem se cabe plantar ali, e nada disso entra na conta.', 'For coffee and banana, the tool looks only at the inter-row. Spacing, age of the plantation, canopy shade and mechanization decide whether anything can be planted there, and none of that is modeled.')}</li>
+        <li>${L('Preço, custo e demanda de cada produto não entram. A nota mede clima, alternância de famílias, cobertura do solo e irrigação.', 'Price, cost and demand for each product are not included. The score measures climate fit, alternation of plant families, soil cover and irrigation.')}</li>
+        <li>${L('Dez anos de clima passado não garantem o próximo.', 'Ten years of past climate do not guarantee the next one.')}</li>
       </ul>
     </section>`;
 }

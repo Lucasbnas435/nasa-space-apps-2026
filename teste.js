@@ -1,3 +1,4 @@
+// Code written with AI assistance (Claude Code, Anthropic), directed and reviewed by the team.
 // Checagem única: roda o modelo com dado real do NASA POWER. Uso: node teste.js
 const assert = require('assert');
 const F = require('./modelo.js');
