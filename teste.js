@@ -2,7 +2,7 @@
 // Checagem única: roda o modelo com dado real do NASA POWER. Uso: node teste.js
 const assert = require('assert');
 const F = require('./modelo.js');
-const URL = 'https://power.larc.nasa.gov/api/temporal/monthly/point?parameters=PRECTOTCORR,T2M,T2M_MAX,T2M_MIN&community=AG&longitude=-46.57&latitude=-22.07&start=2015&end=2024&format=JSON';
+const URL = 'https://power.larc.nasa.gov/api/temporal/monthly/point?parameters=PRECTOTCORR,T2M,T2M_MAX,T2M_MIN,GWETROOT&community=AG&longitude=-46.57&latitude=-22.07&start=2015&end=2024&format=JSON';
 
 (async () => {
   const bruto = await (await fetch(URL)).json();
@@ -10,6 +10,11 @@ const URL = 'https://power.larc.nasa.gov/api/temporal/monthly/point?parameters=P
   assert.strictEqual(clima.anos, 10);
   const anual = clima.chuvaMedia.reduce((a, b) => a + b, 0);
   assert(anual > 800 && anual < 2500, 'chuva anual fora do plausível: ' + anual);
+
+  // umidade do solo na zona das raízes (GWETROOT): 12 meses, entre 0 e 1, e chega às estratégias
+  assert(clima.umidMedia.length === 12 && clima.umidMedia.every(v => v > 0 && v <= 1), 'GWETROOT fora de 0 a 1: ' + clima.umidMedia);
+  assert(clima.umidSeca.every((v, m) => v <= clima.umidMedia[m]), 'GWETROOT: menor valor acima da média');
+  assert.strictEqual(F.resumirClima({ ...bruto, properties: { parameter: { ...bruto.properties.parameter, GWETROOT: undefined } } }).umidMedia[0], null, 'sem GWETROOT deveria dar null');
 
   // correção de altitude: 300 m acima da célula esfria 1,95 °C
   const alto = F.resumirClima(bruto, clima.altitude + 300);
@@ -24,6 +29,7 @@ const URL = 'https://power.larc.nasa.gov/api/temporal/monthly/point?parameters=P
   assert.strictEqual(c.av.repeticoes, 0, 'alternar deixou família repetida');
   assert(c.av.notas.clima >= a.av.notas.clima, 'alternar piorou o encaixe no clima');
   assert(c.nota > a.nota, 'alternar não superou a atual');
+  assert(a.av.umidCultura > 0 && a.av.umidCultura <= 1, 'umidade do solo não chegou à avaliação');
   for (const e of [a, b, c]) { // nenhuma estratégia pode sobrepor culturas nem passar de 24 meses
     const usados = e.rot.flatMap(it => Array.from({ length: F.CULTURAS[it.c].ciclo }, (_, k) => it.ini + k));
     assert.strictEqual(new Set(usados).size, usados.length, 'sobreposição em ' + e.id);

@@ -72,7 +72,7 @@
       <div><label for="lon">Longitude</label><input id="lon" type="number" step="0.0001" min="-180" max="180" value="-46.53"></div>
       <div><label for="alt" data-pt="Altitude da área em metros">Altitude of the land, in meters</label><input id="alt" type="number" step="10" min="0" max="5000"></div>
     </div>
-    <small data-pt="Padrão: zona rural de Andradas, MG, Brasil. No Google Maps, clique com o botão direito no talhão para copiar a coordenada. A altitude corrige a temperatura: o dado de clima da NASA é a média de uma área grande, e área mais alta é mais fria. Em branco, a ferramenta busca a altitude no relevo medido pela missão SRTM da NASA.">Default: rural Andradas, Minas Gerais, Brazil. In Google Maps, right-click your field to copy the coordinate. Altitude corrects temperature: NASA climate data is the average of a large area, and higher land is colder. If left blank, the tool reads the altitude from the terrain measured by NASA's SRTM mission.</small>
+    <small data-pt="Padrão: zona rural de Andradas, MG, Brasil. No Google Maps, clique com o botão direito no talhão para copiar a coordenada. A altitude corrige a temperatura: o dado de clima da NASA é a média de uma área grande, e área mais alta é mais fria. A cada comparação, a ferramenta lê a altitude do ponto no relevo medido pela missão SRTM da NASA. Se você conhece a altitude exata, digite-a: ela vale até você mudar a coordenada.">Default: rural Andradas, Minas Gerais, Brazil. In Google Maps, right-click your field to copy the coordinate. Altitude corrects temperature: NASA climate data is the average of a large area, and higher land is colder. On every run, the tool reads the altitude of the point from the terrain measured by NASA's SRTM mission. If you know the exact altitude, type it: it holds until you change the coordinate.</small>
   </section>
 
   <section>
@@ -129,7 +129,7 @@ function montarForm(manter) {
   const [titulo, dica] = textoSlots(p), ops = F.opcoes(p);
   $('tSlots').textContent = titulo;
   $('dSlots').textContent = L('Deixe em "nada" as linhas que não usar. ', 'Leave unused rows as "nothing". ') + dica;
-  $('alt').placeholder = L('em branco: busca pelo relevo', 'blank: read from terrain');
+  $('alt').placeholder = L('lida do relevo SRTM a cada comparação', 'read from SRTM terrain on every run');
   $('slots').innerHTML = SLOTS.map(k => `<div class="slot">
     <select aria-label="${L('Cultura', 'Crop')} ${k + 1}" data-c="${k}"><option value="">${L('nada', 'nothing')}</option>${ops.map(id =>
       `<option value="${id}" ${atual[k]?.c === id ? 'selected' : ''}>${esc(F.nome(id))}</option>`).join('')}</select>
@@ -209,23 +209,27 @@ function painelMunicipio() {
       `Source: IBGE (Brazilian statistics office), Municipal Agricultural Production ${esc(lav.ano)}, harvested area. Municipality total: ${ha(lav.total)}, across ${lav.itens.length} crops.`)}</small></p></section>`;
 }
 
-// Altitude do ponto pelo modelo de relevo SRTM da NASA, servido pela Open-Elevation. Só quando o campo está vazio.
-let altSrtm = false;
+// Altitude do ponto pelo modelo de relevo SRTM da NASA, servido pela Open-Elevation, buscada de novo a cada comparação.
+// Um valor digitado pelo produtor vale só para a coordenada em que foi digitado: mudou o ponto, volta a valer o SRTM.
+let altSrtm = false, altFalhou = false, altManual = '';
+const chaveAlt = (lat, lon) => lat + ',' + lon;
 async function buscarAltitude(lat, lon) {
-  if (+$('alt').value > 0) return;
+  altSrtm = false; altFalhou = false;
+  if (altManual === chaveAlt(lat, lon) && +$('alt').value > 0) return;
+  altManual = ''; $('alt').value = ''; // nunca reaproveita a altitude de outro ponto
   try {
-    const j = await (await fetch(`https://api.open-elevation.com/api/v1/lookup?locations=${lat.toFixed(3)},${lon.toFixed(3)}`)).json();
+    const j = await (await fetch(`https://api.open-elevation.com/api/v1/lookup?locations=${lat.toFixed(4)},${lon.toFixed(4)}`)).json();
     const m = Math.round(j.results[0].elevation);
-    if (m > 0) { $('alt').value = m; altSrtm = true; }
-  } catch (e) { altSrtm = false; }
+    if (m > 0) { $('alt').value = m; altSrtm = true; } else altFalhou = true;
+  } catch (e) { altFalhou = true; }
 }
-$('alt').addEventListener('input', () => { altSrtm = false; });
+$('alt').addEventListener('input', () => { altManual = $('alt').value ? chaveAlt(+$('lat').value, +$('lon').value) : ''; altSrtm = false; });
 
 let bruto = null;
 async function buscarClima(lat, lon) {
   const chave = lat + ',' + lon, alt = +$('alt').value || 0;
   if (bruto && chave === chaveClima) { clima = F.resumirClima(bruto, alt); return; }
-  const url = `https://power.larc.nasa.gov/api/temporal/monthly/point?parameters=PRECTOTCORR,T2M,T2M_MAX,T2M_MIN&community=AG&longitude=${lon}&latitude=${lat}&start=2015&end=2024&format=JSON`;
+  const url = `https://power.larc.nasa.gov/api/temporal/monthly/point?parameters=PRECTOTCORR,T2M,T2M_MAX,T2M_MIN,GWETROOT&community=AG&longitude=${lon}&latitude=${lat}&start=2015&end=2024&format=JSON`;
   const r = await fetch(url);
   if (!r.ok) throw new Error(L(`A NASA POWER não respondeu (código ${r.status}). Tente de novo em instantes.`, `NASA POWER did not respond (code ${r.status}). Try again in a moment.`));
   bruto = await r.json(); clima = F.resumirClima(bruto, alt); chaveClima = chave;
@@ -246,6 +250,7 @@ $('ir').addEventListener('click', async () => {
   $('ir').disabled = false;
 });
 
+const pc = v => Math.round(v * 100) + '%';
 const mm = v => Math.round(v) + ' mm', gr = v => (lang === 'pt' ? v.toFixed(1).replace('.', ',') : v.toFixed(1)) + ' °C';
 const curto = id => F.nome(id).split(' (')[0];
 function linhaDoTempo(av) {
@@ -274,6 +279,10 @@ function cartao(e, base, melhor) {
     `${av.mesesSoloNu} of 24 months with ${av.perene ? 'the inter-row bare' : 'the ' + fx + ' empty'}; in those months an average of ${mm(av.chuvaSoloNu)} of rain falls on bare soil (${pcSolo}% of the rainfall in the period).`));
   ev.push(L(`Irrigação estimada: ${mm(av.irrigacao)} em dois anos, contando ${F.AGUA_MES} mm por mês de cultura menos a chuva média.`,
     `Estimated irrigation: ${mm(av.irrigacao)} over two years, counting ${F.AGUA_MES} mm per crop-month minus mean rainfall.`));
+  if (av.umidCultura != null) ev.push(L(`Umidade do solo na zona das raízes nos meses de cultura em campo: ${pc(av.umidCultura)} em média; ${av.mesesSoloSeco} mês(es) abaixo de ${pc(F.SOLO_SECO)}.`,
+    `Root-zone soil wetness during open-field crop-months: ${pc(av.umidCultura)} on average; ${av.mesesSoloSeco} month(s) below ${pc(F.SOLO_SECO)}.`));
+  if (av.mesesSoloSeco) ris.push(L(`${av.mesesSoloSeco} mês(es) de cultura com o solo seco na zona das raízes (abaixo de ${pc(F.SOLO_SECO)}). Planejar irrigação ou cobertura morta para esses meses.`,
+    `${av.mesesSoloSeco} crop-month(s) with dry soil in the root zone (below ${pc(F.SOLO_SECO)}). Plan irrigation or mulch for those months.`));
   for (const it of av.itens) {
     if (it.antes) ev.push(L(`${curto(it.c)} entra em ${F.rotulo(it.ini)} no lugar de ${curto(it.antes)}.`, `${curto(it.c)} comes in ${F.rotulo(it.ini)} in place of ${curto(it.antes).toLowerCase()}.`));
     const motivos = [...new Set(it.status.filter(st => st.s !== 'bom').map(st => st.motivo))];
@@ -314,15 +323,20 @@ function desenhar() {
   const quente = clima.tMedia.indexOf(Math.max(...clima.tMedia)), anual = mm(clima.chuvaMedia.reduce((a, b) => a + b, 0)), cel = Math.round(clima.altitude);
   const cal = F.calendario(clima, perfil()), anoTodo = cal.filter(l => l.meses.every(m => m.s === 'bom')).length;
   const fonteAlt = altSrtm ? L('relevo SRTM da NASA', 'NASA SRTM terrain') : L('informada por você', 'entered by you');
+  const us = clima.umidMedia.filter(v => v != null), umid = us.length === 12 ? pc(us.reduce((a, b) => a + b, 0) / 12) : '';
   $('saida').innerHTML = `<section>
       <h2>${L(`Clima do ponto (${clima.anos} anos, 2015 a 2024)`, `Climate at your point (${clima.anos} years, 2015 to 2024)`)}</h2>
       <div class="barras" role="img" aria-label="${L('Chuva média por mês', 'Mean rainfall per month')}">${clima.chuvaMedia.map((v, m) =>
         `<div style="height:${100 * v / max}%" title="${MS[m]}: ${L('média', 'mean')} ${mm(v)}, ${L('ano mais seco', 'driest year')} ${mm(clima.chuvaSeca[m])}"><i style="height:${100 * clima.chuvaSeca[m] / v}%"></i></div>`).join('')}</div>
-      <div class="eixo12">${MS.map((m, i) => `<div>${m}<br>${clima.tMedia[i].toFixed(0)}°</div>`).join('')}</div>
+      <div class="eixo12">${MS.map((m, i) => `<div>${m}<br>${clima.tMedia[i].toFixed(0)}°${clima.umidMedia[i] != null
+        ? `<br><span title="${L('umidade do solo na zona das raízes; menor dos dez anos', 'root-zone soil wetness; lowest of the ten years')}: ${pc(clima.umidSeca[i])}">${pc(clima.umidMedia[i])}</span>` : ''}</div>`).join('')}</div>
       <p><small>${L(`Barra clara: chuva média do mês. Parte escura: o ano mais seco. Abaixo do mês, a temperatura média. Total de chuva no ano: ${anual}. Mês mais quente: ${MS[quente]} (${gr(clima.tMedia[quente])}). Mínima registrada abaixo de ${F.LIMITE_GEADA} °C em: ${frios.join(', ') || 'nenhum mês'}.`,
         `Light bar: mean rainfall of the month. Dark part: the driest year. Below each month, the mean temperature. Total rainfall per year: ${anual}. Warmest month: ${MS[quente]} (${gr(clima.tMedia[quente])}). Lowest temperature on record below ${F.LIMITE_GEADA} °C in: ${frios.join(', ') || 'no month'}.`)}
       ${clima.ajuste ? L(`Temperatura corrigida em ${gr(clima.ajuste)} para ${$('alt').value} m (altitude: ${fonteAlt}); a célula da NASA está a ${cel} m.`, `Temperature corrected by ${gr(clima.ajuste)} for ${$('alt').value} m (altitude: ${fonteAlt}); the NASA grid cell sits at ${cel} m.`)
-        : L(`Sem correção de altitude: o dado vale para ${cel} m.`, `No altitude correction: the data holds for ${cel} m.`)}</small></p>
+        : L(`Sem correção de altitude: o dado vale para ${cel} m.`, `No altitude correction: the data holds for ${cel} m.`)}
+      ${altFalhou && !clima.ajuste ? L(' Não consegui ler a altitude no relevo SRTM agora. Digite a altitude da área para corrigir a temperatura.', ' Could not read the altitude from SRTM terrain right now. Type the altitude of your land to correct temperature.') : ''}
+      ${umid ? L(` Abaixo da temperatura, a umidade do solo na zona das raízes (NASA POWER, modelo MERRA-2): 0% é solo seco, 100% é solo saturado. Média do ano: ${umid}.`,
+        ` Below the temperature, root-zone soil wetness (NASA POWER, MERRA-2 model): 0% is dry soil, 100% is saturated. Yearly mean: ${umid}.`) : ''}</small></p>
     </section>
     <section>
       <h2>${L('Quando cada produto vai bem em campo neste ponto', 'When each crop fits the climate at this point')}</h2>
@@ -340,6 +354,7 @@ function desenhar() {
       <h2>${L('O que esta ferramenta não sabe', 'What this tool does not know')}</h2>
       <ul>
         <li>${L(`O clima vem de uma grade de cerca de 50 km, com altitude média de ${cel} m. A temperatura é corrigida pela altitude da área; a chuva não é.`, `Climate comes from a grid of about 50 km, with a mean altitude of ${cel} m. Temperature is corrected for the altitude of your land; rainfall is not.`)}</li>
+        <li>${L(`A umidade do solo é estimada por modelo (MERRA-2) para a mesma grade, não medida no seu solo. Solo arenoso seca antes, argiloso segura mais água. O limite de ${pc(F.SOLO_SECO)} para "solo seco" ainda não foi revisado por um agrônomo.`, `Soil wetness is a model estimate (MERRA-2) for the same grid, not a measurement of your soil. Sandy soil dries sooner, clay holds more water. The ${pc(F.SOLO_SECO)} threshold for "dry soil" has not been reviewed by an agronomist yet.`)}</li>
         <li>${L('A faixa de temperatura e o ciclo de cada cultura são valores gerais, ainda sem revisão de um agrônomo da região. Cultivares de verão e de inverno mudam essas faixas.', 'The temperature range and cycle length of each crop are general reference values, not yet reviewed by a local agronomist. Summer and winter cultivars shift these ranges.')}</li>
         <li>${L('Dentro da estufa a temperatura é mais alta que a do ar de fora. Para as culturas de estufa, a ferramenta usa a temperatura externa.', 'Inside a greenhouse the temperature is higher than the outside air. For greenhouse crops, the tool uses the outside temperature.')}</li>
         <li>${L('Não há análise de solo, declividade nem histórico de pragas da área.', 'There is no soil analysis, slope or pest history of the area.')}</li>

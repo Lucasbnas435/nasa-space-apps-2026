@@ -17,8 +17,9 @@ const rotulo = i => `${M()[mesCal(i)]}/${L('ano', 'year')} ${i < 6 ? 1 : i < 18 
 const LIMITE_GEADA = 3;    // °C de mínima absoluta do mês abaixo da qual há risco de geada
 const CHUVA_FORTE = 200;   // mm no mês acima do qual folhosa em campo aberto pede atenção
 const MES_SECO = 50;       // mm no mês abaixo do qual planta na entrelinha disputa água com a perene
-const AGUA_MES = 120;      // ponytail: referência única de 4 mm/dia para toda cultura; trocar por Kc da FAO-56 por cultura quando o agrônomo revisar
+const AGUA_MES = 120;      // TODO: referência única de 4 mm/dia para toda cultura; trocar por Kc da FAO-56 por cultura quando o agrônomo revisar
 const GRADIENTE = 0.65;    // °C a cada 100 m de altitude (gradiente térmico padrão)
+const SOLO_SECO = 0.5;     // TODO: umidade do solo na zona das raízes (GWETROOT, 0 a 1) abaixo da qual a cultura tende a pedir irrigação; PENDENTE de revisão do agrônomo
 
 const PERFIS = {
   hortalicas: { nome: 'Hortaliças', faixa: 'canteiro', en: 'Vegetables', faixaEn: 'bed' },
@@ -27,7 +28,7 @@ const PERFIS = {
 };
 const perfilNome = id => L(PERFIS[id].nome, PERFIS[id].en), faixaNome = id => L(PERFIS[id].faixa, PERFIS[id].faixaEn);
 
-// ponytail: tabela escrita de memória, PENDENTE de revisão do agrônomo. Trocar aqui, só aqui.
+// TODO: tabela escrita de memória, PENDENTE de revisão do agrônomo. Trocar aqui, só aqui.
 // p = perfil; ciclo = meses na faixa; tmin/tmax = faixa de temperatura média mensal em que a cultura vai bem (°C);
 // g = sensível a geada; ch = sensível a chuva forte em campo aberto; estufa = cultivo protegido;
 // perene = fica os 24 meses; entre = pode ser plantada na entrelinha de perene; cobertura = não é colhida.
@@ -97,7 +98,11 @@ function resumirClima(power, altitudeReal) {
     Object.entries(p[k]).filter(([d, v]) => +d.slice(4) === m + 1 && v > -900).map(([, v]) => v));
   const media = vs => vs.reduce((a, b) => a + b, 0) / vs.length;
   const chuva = porMes('PRECTOTCORR').map((vs, m) => vs.map(v => v * DIAS[m])); // mm/dia -> mm/mês
+  // GWETROOT: umidade do solo na zona das raízes (MERRA-2), 0 = seco, 1 = saturado. null se a API não devolver.
+  const umid = p.GWETROOT ? porMes('GWETROOT') : null;
   return {
+    umidMedia: umid ? umid.map(vs => (vs.length ? media(vs) : null)) : Array(12).fill(null),
+    umidSeca: umid ? umid.map(vs => (vs.length ? Math.min(...vs) : null)) : Array(12).fill(null),
     anos: chuva[0].length, altitude, ajuste,
     chuvaMedia: chuva.map(media),
     chuvaSeca: chuva.map(vs => Math.min(...vs)),
@@ -154,8 +159,13 @@ function avaliar(rot, clima) {
   const pontosClima = comerciais.reduce((s, it) => s + it.status.reduce((a, st) => a + VALOR[st.s], 0), 0);
   const irrigacao = itens.reduce((s, it) => s + it.irrigacao, 0);
   const familias = new Set(itens.map(it => CULTURAS[it.c].familia)).size;
+  // Umidade do solo nos meses de cultura colhida em campo (estufa é irrigada e fica de fora).
+  const umidMeses = comerciais.filter(it => !CULTURAS[it.c].estufa)
+    .flatMap(it => mesesDe(it).map(i => clima.umidMedia[mesCal(i)])).filter(v => v != null);
   return {
     itens, ocupado, perene, mesesSoloNu: livres.length, chuvaSoloNu, chuvaTotal, repeticoes, irrigacao, mesesCom, familias,
+    umidCultura: umidMeses.length ? umidMeses.reduce((a, b) => a + b, 0) / umidMeses.length : null,
+    mesesSoloSeco: umidMeses.filter(v => v < SOLO_SECO).length,
     mesesRisco: comerciais.reduce((s, it) => s + it.status.filter(st => st.s === 'risco').length, 0),
     mesesAtencao: comerciais.reduce((s, it) => s + it.status.filter(st => st.s === 'atencao').length, 0),
     notas: { // 0 a 1, maior é melhor
@@ -264,5 +274,5 @@ function resumirLavouras(sidra) {
   return { total, itens, ano: linhas[0] && linhas[0].ano, municipio: linhas[0] && linhas[0].municipio };
 }
 
-const FieldShift = { get MESES() { return M(); }, setLang, L, nome, perfilNome, faixaNome, CULTURAS, PERFIS, DIAS, LIMITE_GEADA, CHUVA_FORTE, MES_SECO, AGUA_MES, mesCal, rotulo, opcoes, ehPerene, resumirClima, statusMes, calendario, avaliar, pontuar, cobrirSolo, alternar, consorciar, comparar, resumirLavouras };
+const FieldShift = { get MESES() { return M(); }, setLang, L, nome, perfilNome, faixaNome, CULTURAS, PERFIS, DIAS, LIMITE_GEADA, CHUVA_FORTE, MES_SECO, AGUA_MES, SOLO_SECO, mesCal, rotulo, opcoes, ehPerene, resumirClima, statusMes, calendario, avaliar, pontuar, cobrirSolo, alternar, consorciar, comparar, resumirLavouras };
 if (typeof module !== 'undefined') module.exports = FieldShift;
