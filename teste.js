@@ -30,6 +30,18 @@ const URL = 'https://power.larc.nasa.gov/api/temporal/monthly/point?parameters=P
   assert(c.av.notas.clima >= a.av.notas.clima, 'alternar piorou o encaixe no clima');
   assert(c.nota > a.nota, 'alternar não superou a atual');
   assert(a.av.umidCultura > 0 && a.av.umidCultura <= 1, 'umidade do solo não chegou à avaliação');
+
+  // relevo e erosão: declive por diferenças centrais, sem declive não avalia, e a erosão não mexe na nota
+  assert.strictEqual(F.declividade(0, [100, 100, 100, 100, 100]), 0);
+  assert(Math.abs(F.declividade(0, [100, 110, 90, 100, 100]) - 100 * 20 / (2 * 0.003 * 111320)) < 1e-9, 'declive norte-sul errado');
+  assert.strictEqual(F.declividade(0, [100, 110, null, 100, 100]), null, 'declive com dado faltando deveria ser null');
+  assert.strictEqual(a.av.erosao, null, 'sem declive a erosão não pode ser avaliada');
+  assert.strictEqual(F.riscoErosao(F.CHUVA_EROSAO - 1, 30).nivel, 0, 'solo quase sempre coberto: risco baixo em qualquer declive');
+  assert.strictEqual(F.riscoErosao(500, 2).nivel, 0);
+  assert.strictEqual(F.riscoErosao(500, 10).nivel, 2);
+  const [ea, eb] = F.comparar(atual, { ...clima, declive: 10 }, { clima: 5, pragas: 5, solo: 5, agua: 5 });
+  assert(ea.av.erosao && eb.av.erosao.nivel <= ea.av.erosao.nivel, 'adubo verde aumentou o risco de erosão');
+  assert.strictEqual(ea.nota, a.nota, 'erosão não pode mudar a nota');
   for (const e of [a, b, c]) { // nenhuma estratégia pode sobrepor culturas nem passar de 24 meses
     const usados = e.rot.flatMap(it => Array.from({ length: F.CULTURAS[it.c].ciclo }, (_, k) => it.ini + k));
     assert.strictEqual(new Set(usados).size, usados.length, 'sobreposição em ' + e.id);

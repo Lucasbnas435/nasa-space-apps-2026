@@ -19,7 +19,16 @@ const CHUVA_FORTE = 200;   // mm no mês acima do qual folhosa em campo aberto p
 const MES_SECO = 50;       // mm no mês abaixo do qual planta na entrelinha disputa água com a perene
 const AGUA_MES = 120;      // TODO: referência única de 4 mm/dia para toda cultura; trocar por Kc da FAO-56 por cultura quando o agrônomo revisar
 const GRADIENTE = 0.65;    // °C a cada 100 m de altitude (gradiente térmico padrão)
-const SOLO_SECO = 0.5;     // TODO: umidade do solo na zona das raízes (GWETROOT, 0 a 1) abaixo da qual a cultura tende a pedir irrigação; PENDENTE de revisão do agrônomo
+const CHUVA_EROSAO = 100;  // TODO: mm de chuva sobre solo descoberto em 24 meses abaixo do qual o risco de erosão é baixo em qualquer declive; PENDENTE de revisão do agrônomo
+const PASSO_RELEVO = 0.003; // graus (~330 m) entre o ponto e os vizinhos usados para medir o declive no SRTM
+// Classes de relevo da Embrapa (Sistema Brasileiro de Classificação de Solos), por declive em %.
+const RELEVOS = [
+  { ate: 3, nivel: 0, pt: 'plano', en: 'flat' },
+  { ate: 8, nivel: 1, pt: 'suave ondulado', en: 'gently rolling' },
+  { ate: 20, nivel: 2, pt: 'ondulado', en: 'rolling' },
+  { ate: Infinity, nivel: 3, pt: 'forte ondulado ou mais', en: 'hilly or steeper' },
+];
+const SOLO_SECO = 0.5;    // TODO: umidade do solo na zona das raízes (GWETROOT, 0 a 1) abaixo da qual a cultura tende a pedir irrigação; PENDENTE de revisão do agrônomo
 
 const PERFIS = {
   hortalicas: { nome: 'Hortaliças', faixa: 'canteiro', en: 'Vegetables', faixaEn: 'bed' },
@@ -112,6 +121,27 @@ function resumirClima(power, altitudeReal) {
   };
 }
 
+// Relevo pelo SRTM: o ponto e quatro vizinhos (norte, sul, leste, oeste) a PASSO_RELEVO graus.
+const pontosRelevo = (lat, lon) => [[lat, lon], [lat + PASSO_RELEVO, lon], [lat - PASSO_RELEVO, lon], [lat, lon + PASSO_RELEVO], [lat, lon - PASSO_RELEVO]];
+// Declive em % por diferenças centrais. elev = altitudes na ordem de pontosRelevo. null se faltar dado.
+function declividade(lat, elev) {
+  if (!elev || elev.length !== 5 || elev.some(v => typeof v !== 'number' || !isFinite(v))) return null;
+  const dy = PASSO_RELEVO * 111320, dx = dy * Math.cos(lat * Math.PI / 180);
+  const [, n, s, l, o] = elev;
+  return 100 * Math.hypot((n - s) / (2 * dy), (l - o) / (2 * dx));
+}
+const relevo = declive => RELEVOS.find(r => declive < r.ate);
+const relevoNome = r => L(r.pt, r.en);
+
+// Risco de erosão = chuva sobre solo descoberto x declive. Sem declive conhecido, não avalia (null).
+// Não entra na nota: assim a ordem das estratégias não depende de o serviço de relevo responder.
+const NIVEIS_EROSAO = ['baixo', 'moderado', 'alto', 'muito alto'], NIVEIS_EROSAO_EN = ['low', 'moderate', 'high', 'very high'];
+function riscoErosao(chuvaSoloNu, declive) {
+  if (declive == null) return null;
+  const r = relevo(declive), nivel = chuvaSoloNu < CHUVA_EROSAO ? 0 : r.nivel;
+  return { nivel, nome: L(NIVEIS_EROSAO[nivel], NIVEIS_EROSAO_EN[nivel]), relevo: r, declive };
+}
+
 // Como a cultura se sai num mês de calendário: bom | atencao | risco, com o motivo.
 function statusMes(id, m, clima) {
   const k = CULTURAS[id], t = clima.tMedia[m], mes = M()[m], fx = `${k.tmin} ${L('a', 'to')} ${k.tmax} °C`;
@@ -166,6 +196,7 @@ function avaliar(rot, clima) {
     itens, ocupado, perene, mesesSoloNu: livres.length, chuvaSoloNu, chuvaTotal, repeticoes, irrigacao, mesesCom, familias,
     umidCultura: umidMeses.length ? umidMeses.reduce((a, b) => a + b, 0) / umidMeses.length : null,
     mesesSoloSeco: umidMeses.filter(v => v < SOLO_SECO).length,
+    erosao: riscoErosao(chuvaSoloNu, clima.declive), // clima.declive: % do SRTM ou do produtor; ausente = não avaliado
     mesesRisco: comerciais.reduce((s, it) => s + it.status.filter(st => st.s === 'risco').length, 0),
     mesesAtencao: comerciais.reduce((s, it) => s + it.status.filter(st => st.s === 'atencao').length, 0),
     notas: { // 0 a 1, maior é melhor
@@ -274,5 +305,5 @@ function resumirLavouras(sidra) {
   return { total, itens, ano: linhas[0] && linhas[0].ano, municipio: linhas[0] && linhas[0].municipio };
 }
 
-const FieldShift = { get MESES() { return M(); }, setLang, L, nome, perfilNome, faixaNome, CULTURAS, PERFIS, DIAS, LIMITE_GEADA, CHUVA_FORTE, MES_SECO, AGUA_MES, SOLO_SECO, mesCal, rotulo, opcoes, ehPerene, resumirClima, statusMes, calendario, avaliar, pontuar, cobrirSolo, alternar, consorciar, comparar, resumirLavouras };
+const FieldShift = { get MESES() { return M(); }, setLang, L, nome, perfilNome, faixaNome, CULTURAS, PERFIS, DIAS, LIMITE_GEADA, CHUVA_FORTE, MES_SECO, AGUA_MES, SOLO_SECO, CHUVA_EROSAO, pontosRelevo, declividade, relevo, relevoNome, riscoErosao, mesCal, rotulo, opcoes, ehPerene, resumirClima, statusMes, calendario, avaliar, pontuar, cobrirSolo, alternar, consorciar, comparar, resumirLavouras };
 if (typeof module !== 'undefined') module.exports = FieldShift;
