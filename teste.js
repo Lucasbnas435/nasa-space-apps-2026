@@ -33,6 +33,33 @@ const URL = 'https://power.larc.nasa.gov/api/temporal/monthly/point?parameters=P
   assert.strictEqual(F.statusMes('pepino', 6, frio).s, 'risco');
   assert.notStrictEqual(F.statusMes('tomate', 0, frio).motivo.includes('geada'), true);
 
+  // perfil de lavouras anuais: milho sobre milho troca por cultura do MESMO perfil
+  const [ga, , gc] = F.comparar([{ c: 'milho', ini: 3 }, { c: 'milho', ini: 15 }], clima, { clima: 5, pragas: 5, solo: 5, agua: 5 });
+  assert.strictEqual(ga.av.repeticoes, 1);
+  assert.strictEqual(gc.av.repeticoes, 0, 'anuais: família repetida');
+  assert(gc.rot.every(i => F.CULTURAS[i.c].cobertura || F.CULTURAS[i.c].p === 'anuais'), 'anuais: saiu do perfil');
+
+  // perene: café com entrelinha nua. A perene fica em todas as estratégias e não ocupa a faixa.
+  const [pa, pb, pc] = F.comparar([{ c: 'cafe', ini: 0 }], clima, { clima: 5, pragas: 5, solo: 5, agua: 5 });
+  assert.strictEqual(pa.av.mesesSoloNu, 24);
+  assert.strictEqual(pa.av.notas.pragas, 0, 'monocultura pura deveria ter nota 0 em diversidade');
+  assert(pb.av.mesesSoloNu < 4, 'perene: adubo verde não cobriu a entrelinha');
+  assert(pc.rot.some(i => i.c === 'feijao'), 'perene: consórcio sem feijão');
+  for (const e of [pa, pb, pc]) {
+    assert.strictEqual(e.rot.filter(F.ehPerene).length, 1, 'perene sumiu em ' + e.id);
+    const usados = e.rot.filter(i => !F.ehPerene(i)).flatMap(it => Array.from({ length: F.CULTURAS[it.c].ciclo }, (_, k) => it.ini + k));
+    assert.strictEqual(new Set(usados).size, usados.length, 'sobreposição na entrelinha em ' + e.id);
+    assert(e.rot.every(i => F.ehPerene(i) || F.CULTURAS[i.c].entre), 'entrelinha recebeu cultura não permitida em ' + e.id);
+  }
+  assert(pc.nota > pa.nota && pb.nota > pa.nota, 'perene: alternativas não superaram a entrelinha nua');
+
+  // IBGE: resumo da produção municipal (Andradas = 3102605)
+  const lav = F.resumirLavouras(await (await fetch('https://apisidra.ibge.gov.br/values/t/5457/n6/3102605/v/216/p/last%201/c782/all')).json());
+  assert(lav.total > 0 && lav.itens[0].nome === 'Café', 'IBGE: esperava café no topo, veio ' + (lav.itens[0] || {}).nome);
+  assert(lav.itens.filter(i => /Café/.test(i.nome)).length === 1, 'IBGE: café duplicado');
+  console.log('IBGE', lav.municipio, lav.ano, '| total', lav.total, 'ha |', lav.itens.slice(0, 5).map(i => `${i.nome} ${Math.round(i.parte * 100)}%`).join(', '));
+  for (const e of [gc, pa, pb, pc]) console.log(e.id.padEnd(9), 'nota', e.nota.toFixed(2), '|', e.rot.map(i => `${i.c}@${F.rotulo(i.ini)}`).join(', '));
+
   console.log('chuva anual (mm):', Math.round(anual), '| T média por mês:', clima.tMedia.map(t => t.toFixed(1)).join(' '));
   for (const e of [a, b, c])
     console.log(e.id.padEnd(9), 'nota', e.nota.toFixed(2), JSON.stringify(Object.fromEntries(Object.entries(e.av.notas).map(([k, v]) => [k, +v.toFixed(2)]))),

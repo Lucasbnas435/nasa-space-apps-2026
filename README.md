@@ -2,7 +2,7 @@
 
 Decision support for crop rotation, built for the NASA Space Apps Challenge 2026, challenge **"Field Shift: Adapting Farms with NASA Data"**.
 
-A grower enters a location, what one bed (or field) receives over two years and what matters most to them. The tool fetches ten years of NASA climate data for that point and returns:
+A grower chooses a production profile (vegetables, annual crops, or perennials such as coffee and banana), enters a location, what one bed or field receives over two years and what matters most to them. The tool fetches ten years of NASA climate data for that point and returns:
 
 1. **A product-by-month calendar**: in which months each crop fits the local temperature, where it sits at the limit and where it falls outside (or faces frost), with the reason for every cell.
 2. **Three rotation strategies compared**, always including the current one:
@@ -10,7 +10,8 @@ A grower enters a location, what one bed (or field) receives over two years and 
    - the same crops, with green manure in the idle windows;
    - alternating plant families and fitting crops to the climate.
 3. For each strategy: why it is suggested, the evidence behind it, benefits over the current rotation, and risks that need local review.
-4. A closing box, **"what this tool does not know"**, stating its limits on screen.
+4. **Municipal context**: what is grown in the grower's municipality, by harvested area, from the Brazilian statistics office (IBGE). It shows at a glance whether the region is a monoculture.
+5. A closing box, **"what this tool does not know"**, stating its limits on screen.
 
 The tool supports the grower's and the agronomist's judgment. It does not replace it.
 
@@ -45,12 +46,26 @@ node teste.js
 
 The POWER grid cell is about 50 km wide. The grower can enter the real altitude of the area and the tool corrects temperature by the standard lapse rate (0.65 °C per 100 m). Rainfall is not corrected.
 
+## Other data sources
+
+| Source | Use |
+|---|---|
+| IBGE, Produção Agrícola Municipal (SIDRA table 5457) | harvested area per crop in the municipality, latest year |
+| IBGE localities API | municipality code |
+| OpenStreetMap Nominatim | municipality name from the coordinate, sent rounded to two decimals (about 1 km) |
+
+All three are called from the browser. If they fail, the climate analysis still runs.
+
+## Perennial crops
+
+Coffee and banana do not rotate: they stay in place for years. For this profile the tool compares what happens **between the rows**: bare soil, green manure, or an annual crop (beans) intercropped in the wettest window that fits the climate, with green manure the rest of the time. The diversity score measures how many plant families share the area, so a pure monoculture scores zero.
+
 ## How the model works
 
 Everything is in `modelo.js`, as pure functions that run in the browser and in Node.
 
 - **Timeline:** 24 months, starting in July.
-- **Crop table (`CULTURAS`):** 24 vegetables plus two green manures, each with plant family, cycle length, temperature range, frost sensitivity, sensitivity to heavy rain in open field and whether it is grown under cover.
+- **Crop table (`CULTURAS`):** 24 vegetables, 6 annual crops, 2 perennials and 3 cover crops, each with plant family, cycle length, temperature range, frost sensitivity, sensitivity to heavy rain in open field and whether it is grown under cover.
 - **Monthly status (`statusMes`):** good, attention or risk, always with the reason in plain language.
 - **Evaluation (`avaliar`):** four scores from 0 to 1:
   - climate fit (share of crop-months inside the temperature range);
@@ -69,6 +84,7 @@ These are also shown on screen.
 - For greenhouse crops the tool uses outside air temperature, which is lower than inside the structure.
 - No soil analysis, slope or pest history of the area.
 - No prices, costs or market demand.
+- For coffee and banana the tool looks only at the inter-row. Spacing, age of the plantation, canopy shade and mechanization decide whether anything can be planted there, and none of that is modeled.
 - One bed at a time. Planning supply of every product across many beds is out of scope.
 - Ten years of past climate do not guarantee the next one.
 
@@ -76,8 +92,7 @@ These are also shown on screen.
 
 - Other NASA datasets named in the challenge (SMAP, GPM, ECOSTRESS, Landsat, MODIS, GRACE, SRTM, GEDI).
 - Interactive map.
-- Grower profiles beyond vegetables (grains, perennials such as coffee and banana).
-- Municipal context from official Brazilian sources (IBGE, CONAB, MapBiomas).
+- Other official Brazilian sources: CONAB (crop forecasts) and MapBiomas (land use maps).
 - English interface.
 
 ## Use of AI

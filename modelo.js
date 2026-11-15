@@ -1,5 +1,6 @@
-// Field Shift - modelo de comparação de rotações para hortaliças. Funções puras: navegador e node.
-// Linha do tempo: 24 meses, índice 0 = julho do ano 1. Um "canteiro" recebe uma sequência de culturas.
+// Field Shift - modelo de comparação de rotações. Funções puras: navegador e node.
+// Linha do tempo: 24 meses, índice 0 = julho do ano 1. Uma "faixa" (canteiro, talhão ou entrelinha)
+// recebe uma sequência de culturas. Cultura perene ocupa os 24 meses e a faixa passa a ser a entrelinha dela.
 
 const DIAS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
@@ -8,41 +9,66 @@ const rotulo = i => `${MESES[mesCal(i)]}/ano ${i < 6 ? 1 : i < 18 ? 2 : 3}`;
 
 const LIMITE_GEADA = 3;    // °C de mínima absoluta do mês abaixo da qual há risco de geada
 const CHUVA_FORTE = 200;   // mm no mês acima do qual folhosa em campo aberto pede atenção
+const MES_SECO = 50;       // mm no mês abaixo do qual planta na entrelinha disputa água com a perene
 const AGUA_MES = 120;      // ponytail: referência única de 4 mm/dia para toda cultura; trocar por Kc da FAO-56 por cultura quando o agrônomo revisar
 const GRADIENTE = 0.65;    // °C a cada 100 m de altitude (gradiente térmico padrão)
 
-// ponytail: tabela escrita de memória, PENDENTE de revisão do agrônomo. Trocar aqui, só aqui.
-// ciclo = meses no canteiro; t = faixa de temperatura média mensal em que a cultura vai bem (°C);
-// g = sensível a geada; ch = sensível a chuva forte em campo aberto; estufa = cultivo protegido (chuva e geada não contam).
-const c = (nome, familia, ciclo, tmin, tmax, o = {}) => ({ nome, familia, ciclo, tmin, tmax, g: false, ch: false, estufa: false, cobertura: false, ...o });
-const CULTURAS = {
-  alface:     c('Alface (americana, romana, mini)', 'asterácea', 2, 12, 22, { ch: true }),
-  salanova:   c('Alface Salanova (estufa)', 'asterácea', 2, 12, 24, { estufa: true }),
-  radicchio:  c('Radicchio', 'asterácea', 3, 10, 20, { ch: true }),
-  chicoria:   c('Chicória frisée', 'asterácea', 3, 12, 22, { ch: true }),
-  rucula:     c('Rúcula', 'brássica', 2, 12, 24, { ch: true }),
-  agriao:     c('Agrião', 'brássica', 2, 10, 20, { ch: true }),
-  brocolis:   c('Brócolis ninja', 'brássica', 3, 12, 22),
-  couveflor:  c('Couve-flor', 'brássica', 4, 12, 20),
-  repolho:    c('Repolho', 'brássica', 4, 12, 24),
-  acelga:     c('Acelga', 'brássica', 3, 12, 22, { ch: true }),
-  couve:      c('Couve manteiga', 'brássica', 6, 12, 24),
-  rabanete:   c('Rabanete', 'brássica', 1, 10, 22),
-  espinafre:  c('Espinafre', 'amarantácea', 2, 8, 20, { ch: true }),
-  beterraba:  c('Beterraba', 'amarantácea', 3, 10, 22),
-  cenoura:    c('Cenoura', 'apiácea', 4, 12, 24),
-  salsinha:   c('Salsinha', 'apiácea', 4, 10, 24),
-  cebolinha:  c('Cebolinha', 'aliácea', 3, 10, 24),
-  cebola:     c('Cebola roxa', 'aliácea', 5, 12, 24),
-  tomate:     c('Tomate grape (estufa)', 'solanácea', 6, 16, 26, { g: true, estufa: true }),
-  pimentao:   c('Pimentão', 'solanácea', 6, 18, 28, { g: true }),
-  abobora:    c('Abóbora cabotiá', 'cucurbitácea', 4, 18, 28, { g: true }),
-  abobrinha:  c('Abobrinha italiana', 'cucurbitácea', 3, 18, 28, { g: true }),
-  pepino:     c('Pepino', 'cucurbitácea', 3, 18, 28, { g: true }),
-  vagem:      c('Vagem', 'leguminosa', 3, 16, 26, { g: true }),
-  aveia:      c('Aveia-preta (adubo verde)', 'gramínea', 2, 0, 99, { cobertura: true }),
-  crotalaria: c('Crotalária (adubo verde)', 'leguminosa', 2, 0, 99, { cobertura: true }),
+const PERFIS = {
+  hortalicas: { nome: 'Hortaliças', faixa: 'canteiro' },
+  anuais: { nome: 'Lavouras anuais (grãos, batata)', faixa: 'talhão' },
+  perenes: { nome: 'Culturas perenes (café, banana)', faixa: 'entrelinha' },
 };
+
+// ponytail: tabela escrita de memória, PENDENTE de revisão do agrônomo. Trocar aqui, só aqui.
+// p = perfil; ciclo = meses na faixa; tmin/tmax = faixa de temperatura média mensal em que a cultura vai bem (°C);
+// g = sensível a geada; ch = sensível a chuva forte em campo aberto; estufa = cultivo protegido;
+// perene = fica os 24 meses; entre = pode ser plantada na entrelinha de perene; cobertura = não é colhida.
+const c = (nome, p, familia, ciclo, tmin, tmax, o = {}) => ({ nome, p, familia, ciclo, tmin, tmax, g: false, ch: false, estufa: false, cobertura: false, perene: false, entre: false, ...o });
+const CULTURAS = {
+  alface:     c('Alface (americana, romana, mini)', 'hortalicas', 'asterácea', 2, 12, 22, { ch: true }),
+  salanova:   c('Alface Salanova (estufa)', 'hortalicas', 'asterácea', 2, 12, 24, { estufa: true }),
+  radicchio:  c('Radicchio', 'hortalicas', 'asterácea', 3, 10, 20, { ch: true }),
+  chicoria:   c('Chicória frisée', 'hortalicas', 'asterácea', 3, 12, 22, { ch: true }),
+  rucula:     c('Rúcula', 'hortalicas', 'brássica', 2, 12, 24, { ch: true }),
+  agriao:     c('Agrião', 'hortalicas', 'brássica', 2, 10, 20, { ch: true }),
+  brocolis:   c('Brócolis ninja', 'hortalicas', 'brássica', 3, 12, 22),
+  couveflor:  c('Couve-flor', 'hortalicas', 'brássica', 4, 12, 20),
+  repolho:    c('Repolho', 'hortalicas', 'brássica', 4, 12, 24),
+  acelga:     c('Acelga', 'hortalicas', 'brássica', 3, 12, 22, { ch: true }),
+  couve:      c('Couve manteiga', 'hortalicas', 'brássica', 6, 12, 24),
+  rabanete:   c('Rabanete', 'hortalicas', 'brássica', 1, 10, 22),
+  espinafre:  c('Espinafre', 'hortalicas', 'amarantácea', 2, 8, 20, { ch: true }),
+  beterraba:  c('Beterraba', 'hortalicas', 'amarantácea', 3, 10, 22),
+  cenoura:    c('Cenoura', 'hortalicas', 'apiácea', 4, 12, 24),
+  salsinha:   c('Salsinha', 'hortalicas', 'apiácea', 4, 10, 24),
+  cebolinha:  c('Cebolinha', 'hortalicas', 'aliácea', 3, 10, 24),
+  cebola:     c('Cebola roxa', 'hortalicas', 'aliácea', 5, 12, 24),
+  tomate:     c('Tomate grape (estufa)', 'hortalicas', 'solanácea', 6, 16, 26, { g: true, estufa: true }),
+  pimentao:   c('Pimentão', 'hortalicas', 'solanácea', 6, 18, 28, { g: true }),
+  abobora:    c('Abóbora cabotiá', 'hortalicas', 'cucurbitácea', 4, 18, 28, { g: true }),
+  abobrinha:  c('Abobrinha italiana', 'hortalicas', 'cucurbitácea', 3, 18, 28, { g: true }),
+  pepino:     c('Pepino', 'hortalicas', 'cucurbitácea', 3, 18, 28, { g: true }),
+  vagem:      c('Vagem', 'hortalicas', 'leguminosa', 3, 16, 26, { g: true }),
+
+  milho:      c('Milho', 'anuais', 'gramínea', 5, 18, 30, { g: true }),
+  soja:       c('Soja', 'anuais', 'leguminosa', 4, 20, 30, { g: true }),
+  feijao:     c('Feijão', 'anuais', 'leguminosa', 3, 16, 26, { g: true, entre: true }),
+  sorgo:      c('Sorgo', 'anuais', 'gramínea', 4, 20, 32, { g: true }),
+  trigo:      c('Trigo', 'anuais', 'gramínea', 4, 10, 22),
+  batata:     c('Batata-inglesa', 'anuais', 'solanácea', 4, 12, 22, { g: true }),
+
+  cafe:       c('Café arábica', 'perenes', 'rubiácea', 24, 17, 24, { g: true, perene: true }),
+  banana:     c('Banana', 'perenes', 'musácea', 24, 20, 30, { g: true, perene: true }),
+
+  aveia:      c('Aveia-preta (adubo verde)', '', 'gramínea', 2, 0, 99, { cobertura: true, entre: true }),
+  crotalaria: c('Crotalária (adubo verde)', '', 'leguminosa', 2, 0, 99, { cobertura: true, entre: true }),
+  braquiaria: c('Braquiária roçada (cobertura)', '', 'gramínea', 6, 0, 99, { cobertura: true, entre: true }),
+};
+const ehPerene = it => CULTURAS[it.c].perene;
+
+// Culturas que o produtor pode escolher num perfil. No perfil de perenes, a faixa é a entrelinha.
+const opcoes = perfil => Object.keys(CULTURAS).filter(id => { const k = CULTURAS[id];
+  return perfil === 'perenes' ? k.entre : k.p === perfil || (k.cobertura && id !== 'braquiaria'); });
 
 // Resume a resposta mensal do NASA POWER em 12 meses de calendário.
 // altitudeReal (m), se informada, corrige a temperatura da célula da grade para a altitude da área.
@@ -76,40 +102,47 @@ function statusMes(id, m, clima) {
 }
 const VALOR = { bom: 1, atencao: 0.5, risco: 0 };
 
-// Calendário produto x mês: em que meses cada cultura do portfólio vai bem nesse ponto.
-const calendario = clima => Object.keys(CULTURAS).filter(id => !CULTURAS[id].cobertura)
+// Calendário produto x mês: em que meses cada cultura do perfil vai bem nesse ponto.
+const calendario = (clima, perfil = 'hortalicas') => Object.keys(CULTURAS)
+  .filter(id => !CULTURAS[id].cobertura && (CULTURAS[id].p === perfil || (perfil === 'perenes' && id === 'feijao')))
   .map(id => ({ id, meses: MESES.map((_, m) => statusMes(id, m, clima)) }));
 
-const ordenar = rot => [...rot].sort((a, b) => a.ini - b.ini);
+const ordenar = rot => [...rot].sort((a, b) => ehPerene(b) - ehPerene(a) || a.ini - b.ini);
 const mesesDe = it => Array.from({ length: CULTURAS[it.c].ciclo }, (_, k) => it.ini + k).filter(i => i < 24);
+const faixa = rot => rot.filter(it => !ehPerene(it)); // o que está na faixa, sem a perene
 
 function avaliar(rot, clima) {
   rot = ordenar(rot);
   const ocupado = Array(24).fill(false);
   const itens = rot.map(it => {
     const k = CULTURAS[it.c], ms = mesesDe(it);
-    ms.forEach(i => (ocupado[i] = true));
+    if (!k.perene) ms.forEach(i => (ocupado[i] = true));
     const status = ms.map(i => statusMes(it.c, mesCal(i), clima));
     const chuva = k.estufa ? 0 : ms.reduce((s, i) => s + clima.chuvaMedia[mesCal(i)], 0);
-    return { ...it, status, meses: ms.length, irrigacao: k.cobertura ? 0 : Math.max(0, AGUA_MES * ms.length - chuva) };
+    return { ...it, status, meses: ms.length, irrigacao: k.cobertura ? 0 : Math.max(0, AGUA_MES * ms.length - chuva),
+      mesesSecos: k.perene ? [] : ms.filter(i => clima.chuvaMedia[mesCal(i)] < MES_SECO) };
   });
   const livres = ocupado.map((o, i) => (o ? -1 : i)).filter(i => i >= 0);
   const chuvaTotal = ocupado.reduce((s, _, i) => s + clima.chuvaMedia[mesCal(i)], 0);
   const chuvaSoloNu = livres.reduce((s, i) => s + clima.chuvaMedia[mesCal(i)], 0);
+  // Repetição conta só entre culturas colhidas: adubo verde no meio não apaga milho depois de milho.
+  const seq = faixa(rot).filter(it => !CULTURAS[it.c].cobertura);
   let repeticoes = 0;
-  for (let k = 1; k < rot.length; k++)
-    if (CULTURAS[rot[k].c].familia === CULTURAS[rot[k - 1].c].familia && !(CULTURAS[rot[k].c].cobertura && CULTURAS[rot[k - 1].c].cobertura)) repeticoes++; // adubo verde seguido não conta
+  for (let k = 1; k < seq.length; k++) if (CULTURAS[seq[k - 1].c].familia === CULTURAS[seq[k].c].familia) repeticoes++;
+  const perene = rot.some(ehPerene);
   const comerciais = itens.filter(it => !CULTURAS[it.c].cobertura);
   const mesesCom = comerciais.reduce((s, it) => s + it.meses, 0);
   const pontosClima = comerciais.reduce((s, it) => s + it.status.reduce((a, st) => a + VALOR[st.s], 0), 0);
   const irrigacao = itens.reduce((s, it) => s + it.irrigacao, 0);
+  const familias = new Set(itens.map(it => CULTURAS[it.c].familia)).size;
   return {
-    itens, ocupado, mesesSoloNu: livres.length, chuvaSoloNu, chuvaTotal, repeticoes, irrigacao, mesesCom,
+    itens, ocupado, perene, mesesSoloNu: livres.length, chuvaSoloNu, chuvaTotal, repeticoes, irrigacao, mesesCom, familias,
     mesesRisco: comerciais.reduce((s, it) => s + it.status.filter(st => st.s === 'risco').length, 0),
     mesesAtencao: comerciais.reduce((s, it) => s + it.status.filter(st => st.s === 'atencao').length, 0),
     notas: { // 0 a 1, maior é melhor
       clima: mesesCom ? pontosClima / mesesCom : 0,
-      pragas: rot.length > 1 ? 1 - repeticoes / (rot.length - 1) : 0,
+      // com perene não há rotação: a nota mede quantas famílias de planta convivem na área (1 = monocultura pura)
+      pragas: perene ? Math.min(1, (familias - 1) / 2) : seq.length > 1 ? 1 - repeticoes / (seq.length - 1) : 0,
       solo: 1 - chuvaSoloNu / chuvaTotal,
       agua: mesesCom ? 1 - Math.min(1, irrigacao / (AGUA_MES * mesesCom)) : 1,
     },
@@ -137,41 +170,75 @@ function cobrirSolo(rot, clima) {
   return rot;
 }
 
-// Troca a cultura que repete a família da anterior, ou que está fora do clima, pela do portfólio
+const aptidao = (id, ini, clima) => { const ms = mesesDe({ c: id, ini }); return ms.reduce((s, i) => s + VALOR[statusMes(id, mesCal(i), clima).s], 0) / ms.length; };
+
+// Troca a cultura que repete a família da anterior, ou que está fora do clima, pela do mesmo perfil
 // que melhor se encaixa naqueles meses sem repetir a família das vizinhas. Depois cobre as janelas.
 function alternar(rot, clima) {
   rot = ordenar(rot).map(it => ({ ...it }));
   const fam = it => (it ? CULTURAS[it.c].familia : '');
-  const aptidao = (id, ini) => { const ms = mesesDe({ c: id, ini }); return ms.reduce((s, i) => s + VALOR[statusMes(id, mesCal(i), clima).s], 0) / ms.length; };
   for (let k = 0; k < rot.length; k++) {
     const it = rot[k], atual = CULTURAS[it.c];
     if (atual.cobertura) continue;
     const repete = k > 0 && fam(rot[k - 1]) === atual.familia;
-    if (!repete && aptidao(it.c, it.ini) >= 1) continue;
+    if (!repete && aptidao(it.c, it.ini, clima) >= 1) continue;
     const espaco = (rot[k + 1] ? rot[k + 1].ini : 24) - it.ini;
     const melhor = Object.keys(CULTURAS)
-      .filter(id => !CULTURAS[id].cobertura && !CULTURAS[id].estufa === !atual.estufa && CULTURAS[id].ciclo <= espaco
+      .filter(id => CULTURAS[id].p === atual.p && !CULTURAS[id].estufa === !atual.estufa && CULTURAS[id].ciclo <= espaco
         && CULTURAS[id].familia !== fam(rot[k - 1]) && CULTURAS[id].familia !== fam(rot[k + 1]))
-      .map(id => ({ id, a: aptidao(id, it.ini), d: Math.abs(CULTURAS[id].ciclo - atual.ciclo) }))
+      .map(id => ({ id, a: aptidao(id, it.ini, clima), d: Math.abs(CULTURAS[id].ciclo - atual.ciclo) }))
       .sort((x, y) => y.a - x.a || x.d - y.d)[0];
-    if (melhor && melhor.a >= 0.5 && (repete || melhor.a > aptidao(it.c, it.ini)))
+    if (melhor && melhor.a >= 0.5 && (repete || melhor.a > aptidao(it.c, it.ini, clima)))
       rot[k] = { c: melhor.id, ini: it.ini, nova: true, antes: it.c };
-    else if (repete && espaco >= 2) // nada do portfólio cabe bem nesses meses: o canteiro descansa com adubo verde
+    else if (repete && espaco >= 2) // nada do perfil cabe bem nesses meses: a faixa descansa com adubo verde
       rot[k] = { c: clima.tMedia[mesCal(it.ini)] >= 18 ? 'crotalaria' : 'aveia', ini: it.ini, nova: true, antes: it.c };
   }
   return cobrirSolo(rot, clima);
 }
 
+// Perene: planta feijão na entrelinha na melhor janela de cada ano (clima bom e mais chuva) e cobre o resto.
+function consorciar(rot, clima) {
+  rot = ordenar(rot).map(it => ({ ...it }));
+  for (const [de, ate] of [[0, 11], [12, 21]]) {
+    const ocupado = avaliar(rot, clima).ocupado;
+    const janela = Array.from({ length: ate - de + 1 }, (_, k) => de + k)
+      .filter(i => i + 2 < 24 && [i, i + 1, i + 2].every(j => !ocupado[j]) && aptidao('feijao', i, clima) >= 1)
+      .map(i => ({ i, chuva: [i, i + 1, i + 2].reduce((s, j) => s + clima.chuvaMedia[mesCal(j)], 0) }))
+      .sort((x, y) => y.chuva - x.chuva)[0];
+    if (janela && janela.chuva >= 3 * MES_SECO) rot.push({ c: 'feijao', ini: janela.i, nova: true });
+  }
+  return cobrirSolo(rot, clima);
+}
+
 function comparar(rotAtual, clima, pesos) {
-  return [
+  const perene = rotAtual.some(ehPerene);
+  const lista = perene ? [
+    { id: 'atual', titulo: 'Manejo atual da entrelinha', rot: ordenar(rotAtual),
+      porque: 'É como a entrelinha está hoje. Cultura perene não entra em rotação: fica anos no mesmo lugar. O que dá para mudar é o que acontece entre as linhas.' },
+    { id: 'cobrir', titulo: 'Adubo verde na entrelinha', rot: cobrirSolo(rotAtual, clima),
+      porque: 'Ocupa a entrelinha com adubo verde, alternando leguminosa no calor e gramínea no frio, para a chuva não cair em solo descoberto e para quebrar a monocultura sem tirar a cultura principal.' },
+    { id: 'alternar', titulo: 'Cultura anual consorciada e adubo verde', rot: consorciar(rotAtual, clima),
+      porque: 'Planta feijão na entrelinha na janela mais chuvosa em que o clima serve, o que traz uma segunda colheita e nitrogênio, e mantém adubo verde no resto do tempo.' },
+  ] : [
     { id: 'atual', titulo: 'Rotação atual', rot: ordenar(rotAtual),
-      porque: 'É o que o canteiro recebe hoje. Serve de base para medir as outras duas.' },
+      porque: 'É o que a área recebe hoje. Serve de base para medir as outras duas.' },
     { id: 'cobrir', titulo: 'Mesmas culturas, com adubo verde nas janelas', rot: cobrirSolo(rotAtual, clima),
       porque: 'Mantém o que você já planta e ocupa as janelas de dois meses ou mais com adubo verde, para a chuva não cair em solo descoberto e para dar descanso entre culturas.' },
     { id: 'alternar', titulo: 'Alternar famílias e ajustar ao clima', rot: alternar(rotAtual, clima),
-      porque: 'Onde a mesma família de planta entra duas vezes seguidas, ou onde a cultura cai em mês fora da sua faixa de temperatura, troca por outra do portfólio que se encaixa melhor naqueles meses. As janelas recebem adubo verde.' },
-  ].map(e => { const av = avaliar(e.rot, clima); return { ...e, av, nota: pontuar(av, pesos) }; });
+      porque: 'Onde a mesma família de planta entra duas vezes seguidas, ou onde a cultura cai em mês fora da sua faixa de temperatura, troca por outra do mesmo perfil que se encaixa melhor naqueles meses. As janelas recebem adubo verde.' },
+  ];
+  return lista.map(e => { const av = avaliar(e.rot, clima); return { ...e, av, nota: pontuar(av, pesos) }; });
 }
 
-const FieldShift = { CULTURAS, MESES, DIAS, LIMITE_GEADA, CHUVA_FORTE, AGUA_MES, mesCal, rotulo, resumirClima, statusMes, calendario, avaliar, pontuar, cobrirSolo, alternar, comparar };
+// Resume a Produção Agrícola Municipal do IBGE (SIDRA, tabela 5457, área colhida em hectares).
+function resumirLavouras(sidra) {
+  const linhas = sidra.slice(1).map(x => ({ nome: x.D4N, ha: +x.V, ano: x.D3N, municipio: x.D1N })).filter(x => x.ha > 0);
+  const total = (linhas.find(x => x.nome === 'Total') || {}).ha || 0;
+  const itens = linhas.filter(x => x.nome !== 'Total' && !/ (Arábica|Canephora)$/.test(x.nome))
+    .map(x => ({ ...x, nome: x.nome.replace(/ \(.*?\)| Total$/g, ''), parte: total ? x.ha / total : 0 }))
+    .sort((a, b) => b.ha - a.ha);
+  return { total, itens, ano: linhas[0] && linhas[0].ano, municipio: linhas[0] && linhas[0].municipio };
+}
+
+const FieldShift = { CULTURAS, PERFIS, MESES, DIAS, LIMITE_GEADA, CHUVA_FORTE, MES_SECO, AGUA_MES, mesCal, rotulo, opcoes, ehPerene, resumirClima, statusMes, calendario, avaliar, pontuar, cobrirSolo, alternar, consorciar, comparar, resumirLavouras };
 if (typeof module !== 'undefined') module.exports = FieldShift;
