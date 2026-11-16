@@ -76,7 +76,7 @@ node teste.js
 
 ## NASA data used
 
-**NASA POWER** (Prediction Of Worldwide Energy Resources), monthly point API, agroclimatology community, 2015 to 2024:
+**NASA POWER** (Prediction Of Worldwide Energy Resources), monthly point API, agroclimatology community, 2015 to 2024. Its temperature, rainfall and soil wetness come from NASA's [MERRA-2](https://gmao.gsfc.nasa.gov/gmao-products/merra-2/) reanalysis:
 
 | Parameter | Use |
 |---|---|
@@ -86,21 +86,21 @@ node teste.js
 | `T2M_MAX` | highest temperature recorded per month |
 | `GWETROOT` | root-zone soil wetness (0 = dry, 1 = saturated), mean and lowest of the ten years per month; flags crop-months with dry soil |
 
-**NASA SRTM** (Shuttle Radar Topography Mission) elevation, served by the Open-Elevation API: altitude and slope of the grower's point. One request per run reads the point and four neighbors about 330 m to the north, south, east and west; the slope comes from their differences.
+**NASA SRTM** (Shuttle Radar Topography Mission) elevation, in the [CGIAR-CSI](https://srtm.csi.cgiar.org) processing of about 250 m, served by the Open-Elevation API: altitude and slope of the grower's point. One request per run reads the point and four neighbors about 330 m to the north, south, east and west; the slope comes from their differences.
 
 The two datasets work together. The POWER grid cell is about 50 km wide and reports its own mean altitude. On every run, the tool reads the real altitude of the point from SRTM (a value typed by the grower overrides it until the coordinate changes) and corrects temperature by the standard lapse rate (0.65 °C per 100 m). In mountain areas this changes the answer: at the default point the cell sits at 1,094 m and the field at about 1,330 m, a 1.5 °C difference. Rainfall is not corrected.
 
 ### Satellite, model and ground data
 
-POWER does not come from a weather station on the farm. Its temperature and rainfall come from NASA's MERRA-2 reanalysis, a model that combines satellite and ground observations into a continuous global grid. That is what makes it available for any point on Earth, with ten years of history and no gaps, including farms with no station nearby. The trade-off is resolution: one value for a cell about 50 km wide. A station on the farm measures the exact place but only from the day it was installed, and often with gaps. The two complement each other: a grower with a rain gauge or a thermometer can check the tool's numbers against their own, and where they disagree, the local measurement wins.
+POWER does not come from a weather station on the farm. Its temperature and rainfall come from NASA's [MERRA-2](https://gmao.gsfc.nasa.gov/gmao-products/merra-2/) reanalysis, a model that combines satellite and ground observations into a continuous global grid. That is what makes it available for any point on Earth, with ten years of history and no gaps, including farms with no station nearby. The trade-off is resolution: one value for a cell about 50 km wide. A station on the farm measures the exact place but only from the day it was installed, and often with gaps. The two complement each other: a grower with a rain gauge or a thermometer can check the tool's numbers against their own, and where they disagree, the local measurement wins.
 
 ## Other data sources
 
 | Source | Use |
 |---|---|
-| IBGE, Produção Agrícola Municipal (SIDRA table 5457) | harvested area per crop in the municipality, latest year |
-| IBGE localities API | municipality code |
-| OpenStreetMap Nominatim | municipality name from the coordinate, sent rounded to two decimals (about 1 km) |
+| [IBGE, Produção Agrícola Municipal (SIDRA table 5457)](https://sidra.ibge.gov.br/tabela/5457) | harvested area per crop in the municipality, latest year |
+| [IBGE localities API](https://servicodados.ibge.gov.br/api/docs/localidades) | municipality code |
+| [OpenStreetMap Nominatim](https://nominatim.org) | municipality name from the coordinate, sent rounded to two decimals (about 1 km) |
 
 All three are called from the browser. If they fail, the climate analysis still runs.
 
@@ -121,7 +121,7 @@ Everything is in `modelo.js`, as pure functions that run in the browser and in N
   - soil protection (share of rainfall that falls on an empty bed);
   - irrigation (reference demand minus mean rainfall).
 - **Final score (`pontuar`):** weighted by the grower's four priority sliders.
-- **Erosion risk (`riscoErosao`):** rain on bare soil combined with the slope class of the Embrapa relief classification (flat below 3%, gently rolling 3 to 8%, rolling 8 to 20%, hilly or steeper above 20%). Below 100 mm of rain on bare soil in two years the risk is low on any slope; above it, the risk follows the slope: low, moderate, high, very high. It appears as evidence, risk and benefit on each card but **does not change the score**, so the ranking of strategies never depends on whether the elevation service answered. When the slope is unknown, the card says erosion was not assessed instead of guessing.
+- **Erosion risk (`riscoErosao`):** rain on bare soil combined with the slope class of the [Embrapa relief classification](https://www.embrapa.br/solos/sibcs) (Brazilian Soil Classification System, SiBCS) (flat below 3%, gently rolling 3 to 8%, rolling 8 to 20%, hilly or steeper above 20%). Below 100 mm of rain on bare soil in two years the risk is low on any slope; above it, the risk follows the slope: low, moderate, high, very high. It appears as evidence, risk and benefit on each card but **does not change the score**, so the ranking of strategies never depends on whether the elevation service answered. When the slope is unknown, the card says erosion was not assessed instead of guessing.
 - **Alternatives:** `cobrirSolo` fills idle windows of two months or more with green manure (sunn hemp when warm, black oat when cold). `alternar` replaces a crop that repeats the previous family, or that falls outside its climate window, with the best-fitting crop from the table; when nothing fits, the bed rests under green manure.
 
 ### Why rules and not a trained model
@@ -189,10 +189,12 @@ Original code and content in this repository are licensed under the **Apache Lic
 
 | Source | Terms |
 |---|---|
-| NASA POWER | NASA open data, free and open |
-| NASA SRTM, via Open-Elevation | SRTM is public domain; the Open-Elevation service is free and open source |
+| [NASA POWER](https://power.larc.nasa.gov) | NASA open data, free and open |
+| [NASA GMAO MERRA-2](https://gmao.gsfc.nasa.gov/gmao-products/merra-2/), through POWER | NASA open data, free and open |
+| [NASA SRTM](https://www.earthdata.nasa.gov/data/instruments/srtm), processed by [CGIAR-CSI](https://srtm.csi.cgiar.org), via [Open-Elevation](https://open-elevation.com) | SRTM is public domain; the Open-Elevation service is free and open source |
 | IBGE (SIDRA and localities APIs) | Brazilian official open data, free to use with attribution |
 | OpenStreetMap Nominatim | data © OpenStreetMap contributors, ODbL 1.0 |
+| [Embrapa SiBCS](https://www.embrapa.br/solos/sibcs) | reference for the relief classes used in erosion risk |
 
 No third-party code libraries are used: the page is plain HTML, CSS and JavaScript.
 
