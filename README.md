@@ -181,7 +181,7 @@ These are also shown on screen.
 
 ## Use of AI (SI)
 
-The code, the crop reference table, the presentation and this document were written with Claude Code (Anthropic) under the direction of the team, who defined the problem, the target grower and the scope, and reviewed the results. The running application does not call any AI model: every number on screen comes from NASA POWER and SRTM data, IBGE statistics and the rules in `modelo.js`. The images in the presentation and in this document are screenshots of the working tool, not AI-generated images.
+The code, the crop reference table, the presentation and this document were written with Claude Code (Anthropic) under the direction of the team, who defined the problem, the target grower and the scope, and reviewed the results. The running application does not call any AI model: every number on screen comes from NASA POWER and SRTM data, IBGE statistics and the rules in `modelo.js`. The Green Window team logo was generated with SI and carries an "SI-generated" watermark that says so. Every other image in the presentation and in this document is a screenshot of the working tool, not an AI-generated image.
 
 ## License and third-party data
 
