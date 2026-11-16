@@ -2,13 +2,11 @@
 
 Decision support for crop rotation, built for the NASA Space Apps Challenge 2026, challenge **"Field Shift: Adapting Farms with NASA Data"**.
 
-## ▶ [Open Field Shift](https://lucasbnas435.github.io/nasa-space-apps-2026/)
+## ▶ [Click here to use Field Shift online](https://lucasbnas435.github.io/nasa-space-apps-2026/)
 
-**https://lucasbnas435.github.io/nasa-space-apps-2026/**
+Runs in the browser, on a computer or a phone. No login, no install, no API key. Press **Compare** with the default values to see a real farm in Andradas, Brazil, or enter your own coordinate. English by default, with Brazilian Portuguese selectable at the top of the page.
 
-Runs in the browser, on a computer or a phone. No login, no install, no API key. Press **Compare** with the default values to see a real farm in Andradas, Brazil, or enter your own coordinate. English by default; [open it in Brazilian Portuguese](https://lucasbnas435.github.io/nasa-space-apps-2026/?lang=pt).
-
-[![Product-by-month calendar: when each crop fits the climate at the point. Click to open the tool.](presentation/screenshots/calendar.png)](https://lucasbnas435.github.io/nasa-space-apps-2026/)
+![Product-by-month calendar: when each crop fits the climate at the point](presentation/screenshots/calendar.png)
 
 **Team Green Window:** José Luiz Kemp Filho and Lucas Nascimento.
 
